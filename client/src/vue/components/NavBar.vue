@@ -3,7 +3,7 @@ export default {};
 </script>
 
 <template>
-  <div class="w-16 h-screen bg-nav-blue flex flex-col justify-between items-center">
+  <nav class="w-16 h-screen bg-nav-blue flex flex-col justify-between items-center fixed">
     <div class="mt-4 flex flex-col items-center">
       <span class="text-white text-2xl font-semibold">Logo</span>
       <svg
@@ -31,7 +31,7 @@ export default {};
         />
       </svg>
       <svg
-        class="mt-3"
+        class="mt-4"
         width="28"
         height="28"
         viewBox="0 0 28 28"
@@ -44,7 +44,7 @@ export default {};
         />
       </svg>
       <svg
-        class="mt-3"
+        class="mt-4"
         width="28"
         height="28"
         viewBox="0 0 28 28"
@@ -57,5 +57,5 @@ export default {};
         />
       </svg>
     </div>
-  </div>
+  </nav>
 </template>

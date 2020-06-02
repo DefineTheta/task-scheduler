@@ -1,9 +1,12 @@
 <script>
 import NavBar from './components/NavBar';
+import SideBar from './components/SideBar';
+import ExperienceBar from './components/ExperienceBar';
+import TaskContainer from './components/TaskContainer';
 
 export default {
   name: 'App',
-  components: { NavBar },
+  components: { NavBar, SideBar, ExperienceBar, TaskContainer },
   data() {
     return {};
   },
@@ -11,8 +14,13 @@ export default {
 </script>
 
 <template>
-  <div>
+  <div class="w-full h-full relative">
     <NavBar></NavBar>
+    <SideBar></SideBar>
+    <div class="main pt-10 flex flex-col items-center right-0 absolute right-0">
+      <ExperienceBar></ExperienceBar>
+      <TaskContainer></TaskContainer>
+    </div>
   </div>
 </template>
 
@@ -30,5 +38,10 @@ body {
   -webkit-font-smoothing: auto;
   -moz-osx-font-smoothing: auto;
   background-color: #f5f5f8;
+}
+
+.main {
+  width: calc(100% - 22.5rem);
+  height: 100vh;
 }
 </style>

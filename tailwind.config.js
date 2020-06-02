@@ -25,31 +25,38 @@ module.exports = {
         108: '27rem',
         116: '29rem',
         144: '36rem',
+        162: '40.5rem',
         '1/2': '50vh',
       },
       minWidth: {
         '2xs': '19rem',
       },
       minHeight: {
-        tile: '45rem',
+        28: '7rem',
+        120: '30rem',
       },
       fontSize: {
         '4xxl': '2.5rem',
       },
       inset: {
-        6: '1.5rem',
+        16: '4rem',
       },
       borderRadius: {
         normal: '5px',
         4: '16px',
       },
+      borderColor: {
+        'black-secondary': 'rgba(0, 0, 0, 0.60)',
+        'grey-dark': '#CCCCCC',
+      },
       backgroundColor: {
         'nav-blue': '#232943',
-        'eerie-black': '#191716',
+        'side-grey': '#E6E6E6',
+        'highlight-grey': '#D8D8D8',
       },
       textColor: {
-        'white-high': 'rgba(255, 255, 255, 0.87)',
-        'white-medium': 'rgba(255, 255, 255, 0.70)',
+        'black-primary': 'rgba(0, 0, 0, 0.87)',
+        'black-secondary': 'rgba(0, 0, 0, 0.60)',
       },
       boxShadow: {
         '4dp':
