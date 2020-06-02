@@ -3,21 +3,13 @@ export default {};
 </script>
 
 <template>
-  <nav class="w-16 h-screen bg-nav-blue flex flex-col justify-between items-center fixed">
-    <div class="mt-4 flex flex-col items-center">
-      <span class="text-white text-2xl font-semibold">Logo</span>
-      <svg
-        class="mt-3"
-        width="28"
-        height="28"
-        viewBox="0 0 28 28"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d="M11.2 28H4.2V14H0L14 0L28 14H23.8V28H16.8V19.6H11.2V28Z" fill="white" />
-      </svg>
+  <nav
+    class="w-full h-16 bg-nav-blue flex flex-row justify-between items-center fixed z-10"
+  >
+    <div class="ml-4 flex flex-row items-center">
+      <span class="text-white text-2xl font-semibold">TS PLUS</span>
     </div>
-    <div class="mb-4 flex flex-col items-center">
+    <div class="mr-4 flex flex-row items-center">
       <svg
         width="28"
         height="28"
@@ -31,7 +23,7 @@ export default {};
         />
       </svg>
       <svg
-        class="mt-4"
+        class="ml-4"
         width="28"
         height="28"
         viewBox="0 0 28 28"
@@ -44,7 +36,7 @@ export default {};
         />
       </svg>
       <svg
-        class="mt-4"
+        class="ml-4"
         width="28"
         height="28"
         viewBox="0 0 28 28"

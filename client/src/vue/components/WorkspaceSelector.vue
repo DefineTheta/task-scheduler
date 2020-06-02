@@ -1,5 +1,15 @@
 <script>
-export default {};
+export default {
+  props: {
+    workspaces: {
+      type: Array,
+      required: true,
+      default: () => {
+        return [];
+      },
+    },
+  },
+};
 </script>
 
 <template>
@@ -24,7 +34,13 @@ export default {};
         />
       </svg>
     </div>
-    <span class="w-full mt-2 py-1 font-semibold text-black-secondary">
+    <span
+      v-for="workspace in workspaces"
+      :key="workspace.id"
+      class="w-full mt-2 py-1 font-semibold text-black-secondary"
+      >{{ workspace.name }}</span
+    >
+    <!-- <span class="w-full mt-2 py-1 font-semibold text-black-secondary">
       🎀 WOTBOS New York
     </span>
     <span class="w-full mt-1 py-1 bg-highlight-grey font-semibold text-black-primary">
@@ -32,6 +48,6 @@ export default {};
     </span>
     <span class="w-full mt-1 py-1 font-semibold text-black-secondary">
       🎶 The Farm SoHo NYC
-    </span>
+    </span> -->
   </div>
 </template>

@@ -8,7 +8,13 @@ export default {
   name: 'App',
   components: { NavBar, SideBar, ExperienceBar, TaskContainer },
   data() {
-    return {};
+    return {
+      workspaces: [
+        { id: 1, name: '🎀 WOTBOS New York' },
+        { id: 2, name: '📜 Quest Workspaces' },
+        { id: 3, name: '🎶 The Farm SoHo NYC' },
+      ],
+    };
   },
 };
 </script>
@@ -16,8 +22,8 @@ export default {
 <template>
   <div class="w-full h-full relative">
     <NavBar></NavBar>
-    <SideBar></SideBar>
-    <div class="main pt-10 flex flex-col items-center right-0 absolute right-0">
+    <SideBar :workspaces="workspaces"></SideBar>
+    <div class="main mt-16 pt-10 flex flex-col items-center right-0 absolute right-0">
       <ExperienceBar></ExperienceBar>
       <TaskContainer></TaskContainer>
     </div>
@@ -41,7 +47,6 @@ body {
 }
 
 .main {
-  width: calc(100% - 22.5rem);
-  height: 100vh;
+  width: calc(100% - 18.5rem);
 }
 </style>
