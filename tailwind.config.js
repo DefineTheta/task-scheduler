@@ -52,7 +52,7 @@ module.exports = {
       backgroundColor: {
         'nav-blue': '#232943',
         'side-grey': '#E6E6E6',
-        'highlight-grey': '#D8D8D8',
+        'highlight-grey': '#CCCCCC',
       },
       textColor: {
         'black-primary': 'rgba(0, 0, 0, 0.87)',

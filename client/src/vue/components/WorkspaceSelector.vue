@@ -8,6 +8,13 @@ export default {
         return [];
       },
     },
+    activeWorkspaceId: {
+      type: Number,
+      required: true,
+      default: () => {
+        return 0;
+      },
+    },
   },
 };
 </script>
@@ -15,7 +22,7 @@ export default {
 <template>
   <div class="w-full mt-4 flex flex-col">
     <div
-      class="pb-1 border-b border-black-secondary flex flex-row justify-between items-center"
+      class="mb-1 pb-1 border-b border-black-secondary flex flex-row justify-between items-center"
     >
       <span class="text-lg font-semibold">Workspaces</span>
       <svg
@@ -37,9 +44,14 @@ export default {
     <span
       v-for="workspace in workspaces"
       :key="workspace.id"
-      class="w-full mt-2 py-1 font-semibold text-black-secondary"
-      >{{ workspace.name }}</span
+      class="w-full mt-1 py-1 font-semibold cursor-pointer workspace-item"
+      :class="{
+        'bg-highlight-grey text-black-primary': activeWorkspaceId === workspace.id,
+        'text-black-secondary': activeWorkspaceId !== workspace.id,
+      }"
     >
+      {{ workspace.name }}
+    </span>
     <!-- <span class="w-full mt-2 py-1 font-semibold text-black-secondary">
       🎀 WOTBOS New York
     </span>
@@ -51,3 +63,12 @@ export default {
     </span> -->
   </div>
 </template>
+
+<style lang="sass">
+.workspace-item {
+  &:hover {
+    background-color: #CCCCCC;
+    color: rgba(0, 0, 0, 0.87);
+  }
+}
+</style>

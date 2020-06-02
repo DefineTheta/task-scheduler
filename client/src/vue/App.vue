@@ -14,6 +14,7 @@ export default {
         { id: 2, name: '📜 Quest Workspaces' },
         { id: 3, name: '🎶 The Farm SoHo NYC' },
       ],
+      activeWorkspaceId: 2,
     };
   },
 };
@@ -22,7 +23,7 @@ export default {
 <template>
   <div class="w-full h-full relative">
     <NavBar></NavBar>
-    <SideBar :workspaces="workspaces"></SideBar>
+    <SideBar :workspaces="workspaces" :active-workspace-id="activeWorkspaceId"></SideBar>
     <div class="main mt-16 pt-10 flex flex-col items-center right-0 absolute right-0">
       <ExperienceBar></ExperienceBar>
       <TaskContainer></TaskContainer>
