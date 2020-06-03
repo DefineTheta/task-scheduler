@@ -48,11 +48,12 @@ module.exports = {
       borderColor: {
         'black-secondary': 'rgba(0, 0, 0, 0.60)',
         'grey-dark': '#CCCCCC',
+        selected: '#232943',
       },
       backgroundColor: {
         'nav-blue': '#232943',
         'side-grey': '#E6E6E6',
-        'highlight-grey': '#CCCCCC',
+        'highlight-grey': '#D8D8D8',
       },
       textColor: {
         'black-primary': 'rgba(0, 0, 0, 0.87)',

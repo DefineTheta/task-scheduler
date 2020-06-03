@@ -46,7 +46,8 @@ export default {
       :key="workspace.id"
       class="w-full mt-1 py-1 font-semibold cursor-pointer workspace-item"
       :class="{
-        'bg-highlight-grey text-black-primary': activeWorkspaceId === workspace.id,
+        'pl-1 border-l-4 border-selected bg-highlight-grey text-black-primary':
+          activeWorkspaceId === workspace.id,
         'text-black-secondary': activeWorkspaceId !== workspace.id,
       }"
     >
