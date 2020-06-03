@@ -86,6 +86,28 @@
 /************************************************************************/
 /******/ ({
 
+/***/ "./server/api/index.js":
+/*!*****************************!*\
+  !*** ./server/api/index.js ***!
+  \*****************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+eval("var express = __webpack_require__(/*! express */ \"express\"); // Router function responsible for routing all the worker associated API endpoints\n\n\nvar worker = __webpack_require__(/*! ./routes/worker */ \"./server/api/routes/worker.js\");\n\nmodule.exports = function () {\n  // Router used to route to /api/v1/ endpoints\n  var apiRouter = express.Router();\n  worker(apiRouter);\n  return apiRouter;\n};\n\n//# sourceURL=webpack:///./server/api/index.js?");
+
+/***/ }),
+
+/***/ "./server/api/routes/worker.js":
+/*!*************************************!*\
+  !*** ./server/api/routes/worker.js ***!
+  \*************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+eval("var express = __webpack_require__(/*! express */ \"express\"); // Router used to route /api/v1/worker endpoints\n\n\nvar workerRouter = express.Router();\n\nmodule.exports = function (apiRouter) {\n  apiRouter.use('/worker', workerRouter); // GET route used to retrive all the workspace a worker belongs to\n\n  workerRouter.get('/workspaces', function (req, res) {\n    var workspaces = [{\n      id: 1,\n      name: '🎀 WOTBOS New York'\n    }, {\n      id: 2,\n      name: '📜 Quest Workspaces'\n    }, {\n      id: 3,\n      name: '🎶 The Farm SoHo NYC'\n    }];\n    res.json(workspaces);\n  });\n};\n\n//# sourceURL=webpack:///./server/api/routes/worker.js?");
+
+/***/ }),
+
 /***/ "./server/config/index.js":
 /*!********************************!*\
   !*** ./server/config/index.js ***!
@@ -118,7 +140,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var path
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../config */ \"./server/config/index.js\");\n// import routes from '../api';\n\n/* harmony default export */ __webpack_exports__[\"default\"] = (function (app) {\n  /**\r\n   * Health Check endpoints\r\n   * @TODO Explain why they are here\r\n   */\n  app.get('/status', function (req, res) {\n    res.status(200).end();\n  });\n  app.head('/status', function (req, res) {\n    res.status(200).end();\n  }); // Load API routes\n  // app.use(config.api.prefix, routes());\n});\n\n//# sourceURL=webpack:///./server/loaders/express.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../api */ \"./server/api/index.js\");\n/* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_api__WEBPACK_IMPORTED_MODULE_0__);\n/* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../config */ \"./server/config/index.js\");\n\n\n/* harmony default export */ __webpack_exports__[\"default\"] = (function (app) {\n  /**\r\n   * Health Check endpoints\r\n   * @TODO Explain why they are here\r\n   */\n  app.get('/status', function (req, res) {\n    res.status(200).end();\n  });\n  app.head('/status', function (req, res) {\n    res.status(200).end();\n  }); // Load API routes\n\n  app.use(_config__WEBPACK_IMPORTED_MODULE_1__[\"default\"].api.prefix, _api__WEBPACK_IMPORTED_MODULE_0___default()());\n});\n\n//# sourceURL=webpack:///./server/loaders/express.js?");
 
 /***/ }),
 

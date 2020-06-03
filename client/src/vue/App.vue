@@ -4,19 +4,24 @@ import SideBar from './components/SideBar';
 import ExperienceBar from './components/ExperienceBar';
 import TaskContainer from './components/TaskContainer';
 
+var API = require('./utility/API.js');
+
 export default {
   name: 'App',
   components: { NavBar, SideBar, ExperienceBar, TaskContainer },
   data() {
     return {
-      workspaces: [
-        { id: 1, name: '🎀 WOTBOS New York' },
-        { id: 2, name: '📜 Quest Workspaces' },
-        { id: 3, name: '🎶 The Farm SoHo NYC' },
-      ],
+      workspaces: [],
       activeWorkspaceId: 2,
       activeUserId: 1,
     };
+  },
+  created() {
+    Event.$on('workspaceRetrieved', function (data) {
+      this.workspaces = data;
+    });
+
+    API.get('/api/v1/worker/workspaces', 'workspaceRetrieved');
   },
 };
 </script>

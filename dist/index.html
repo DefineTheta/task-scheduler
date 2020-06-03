@@ -1,14 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-	<title>Task Scheduler</title>
-</head>
-
-<body>
-	<div id="root"></div>
-<script src="index.89a47c0d.js"></script></body>
-
-</html>
+Html Webpack Plugin:
+<pre>
+  Error: D:\Uni\Year Four\Web And Database Design\Project\webapp/client/src/VueEvent.js?:4
+  window.Event = new Vue();
+  ^
+  ReferenceError: window is not defined
+  
+  - VueEvent.js?:4 eval
+    D:\Uni\Year Four\Web And Database Design\Project\webapp/client/src/VueEvent.js?:4:1
+  
+  - index.html:97 Object../client/src/VueEvent.js
+    D:/Uni/Year Four/Web And Database Design/Project/webapp/client/src/index.html:97:1
+  
+  - index.html:21 __webpack_require__
+    D:/Uni/Year Four/Web And Database Design/Project/webapp/client/src/index.html:21:30
+  
+  - loader.js:3 eval
+    [index.html?.]/[html-webpack-plugin]/lib/loader.js:3:34
+  
+  - index.html:120 Object../node_modules/html-webpack-plugin/lib/loader.js!./client/src/index.html
+    D:/Uni/Year Four/Web And Database Design/Project/webapp/client/src/index.html:120:1
+  
+  - index.html:21 __webpack_require__
+    D:/Uni/Year Four/Web And Database Design/Project/webapp/client/src/index.html:21:30
+  
+  - index.html:85 
+    D:/Uni/Year Four/Web And Database Design/Project/webapp/client/src/index.html:85:18
+  
+  - index.html:88 
+    D:/Uni/Year Four/Web And Database Design/Project/webapp/client/src/index.html:88:10
+  
+  - index.js:314 HtmlWebpackPlugin.evaluateCompilationResult
+    [webapp]/[html-webpack-plugin]/index.js:314:28
+  
+</pre>

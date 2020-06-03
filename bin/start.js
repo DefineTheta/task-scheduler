@@ -15,7 +15,7 @@ const del = require('del');
 const childProcess = require('child_process');
 
 // Create and call function to delete previous dist folder
-del.sync(['dist/**', '!dist', '!dist/addons']);
+del.sync(['dist/**', '!dist', '!dist/VueEvent.js']);
 
 const startServer = (serverPath, callback) => {
   // keep track of whether callback has been invoked to prevent multiple invocations
