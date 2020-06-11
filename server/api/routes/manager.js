@@ -1,23 +1,23 @@
 var express = require('express');
 
-// Router used to route /api/v1/worker endpoints
-var workerRouter = express.Router();
+// Router used to route /api/v1/manager endpoints
+var managerRouter = express.Router();
 
 module.exports = function (apiRouter) {
-  apiRouter.use('/worker', workerRouter);
+  apiRouter.use('/manager', managerRouter);
 
-  // Create a new worker account
-  workerRouter.post('/join', function (req, res) {
-    res.json({ account_type: 'worker' });
+  // Create a new manager account
+  managerRouter.post('/join', function (req, res) {
+    res.json({ account_type: 'manager' });
   });
 
-  // Login a worker account
-  workerRouter.post('/login', function (req, res) {
-    res.json({ account_type: 'worker' });
+  // Login a manager account
+  managerRouter.post('/login', function (req, res) {
+    res.json({ account_type: 'manager' });
   });
 
-  // GET route used to retrive all the workspace a worker belongs to
-  workerRouter.get('/workspaces', function (req, res) {
+  // GET route used to retrive all the workspace a maanger belongs to
+  managerRouter.get('/workspaces', function (req, res) {
     var workspaces = [
       { id: 1, name: '🎀 WOTBOS New York' },
       { id: 2, name: '📜 Quest Workspaces' },
@@ -27,22 +27,33 @@ module.exports = function (apiRouter) {
     res.json(workspaces);
   });
 
+  // GET route used to retrive all the workers in a workspace a maanger belongs to
+  managerRouter.get('/workspaces/workers', function (req, res) {
+    var workers = [
+      { id: 1, name: 'Amy Fischer' },
+      { id: 2, name: 'Bob The Builder' },
+      { id: 3, name: 'Tigger' },
+    ];
+
+    res.json(workers);
+  });
+
   // GET route used to retrive today's tasks
-  workerRouter.get('/tasks', function (req, res) {
+  managerRouter.get('/tasks', function (req, res) {
     if (req.query.timeline == 'today' || req.query.timeline == undefined) {
       let tasks = [
         {
           date: Math.round(new Date().getTime() / 1000),
           tasks: [
-            { title: 'This is a test task', user: 1, completed: false },
+            { title: 'This is a manager test task', user: 1, completed: false },
             {
-              title: 'I have to do this taks today',
+              title: 'You have logged in as the manager',
               user: 1,
               completed: false,
               color: 'red',
             },
             {
-              title: 'This task is not assigned to me',
+              title: 'Muhahaahaha',
               user: 3,
               completed: false,
               color: 'orange',
@@ -201,39 +212,3 @@ module.exports = function (apiRouter) {
     }
   });
 };
-
-// [
-//   {
-//     date: 1591109736,
-//     tasks: [
-//       { title: 'Hi I am a Task', user: 1, completed: false },
-//       { title: 'Hi Gary', user: 1, completed: false, color: 'red' },
-//       { title: 'Look at me', user: 3, completed: false },
-//       { title: 'I am Mr. Meeseeks', user: 2, completed: false },
-//       { title: 'SAY MY NAME!', user: 1, completed: false },
-//       { title: ':)', user: 4, completed: false },
-//     ],
-//   },
-//   {
-//     date: 1591196136,
-//     tasks: [
-//       { title: 'Hi I am a Task', user: 1, completed: false },
-//       { title: 'Hi Gary', user: 1, completed: false },
-//       { title: 'Look at me', user: 3, completed: false, color: 'teal' },
-//       { title: 'I am Mr. Meeseeks', user: 2, completed: false },
-//       { title: 'SAY MY NAME!', user: 1, completed: false },
-//       { title: ':)', user: 4, completed: false },
-//     ],
-//   },
-//   {
-//     date: 1591368936,
-//     tasks: [
-//       { title: 'Hi I am a Task', user: 1, completed: false },
-//       { title: 'Hi Gary', user: 1, completed: false },
-//       { title: 'Look at me', user: 3, completed: false },
-//       { title: 'I am Mr. Meeseeks', user: 2, completed: false },
-//       { title: 'SAY MY NAME!', user: 1, completed: false },
-//       { title: ':)', user: 4, completed: false },
-//     ],
-//   },
-// ],

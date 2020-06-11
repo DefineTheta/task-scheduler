@@ -17,7 +17,15 @@ module.exports = {
   entry: {
     index: [
       'webpack-hot-middleware/client?path=/__webpack_hmr',
-      './client/src/vue/main.js',
+      './client/src/vue/index_entry.js',
+    ],
+    schedule: [
+      'webpack-hot-middleware/client?path=/__webpack_hmr',
+      './client/src/vue/schedule_entry.js',
+    ],
+    new_task: [
+      'webpack-hot-middleware/client?path=/__webpack_hmr',
+      './client/src/vue/new_task_entry.js',
     ],
   },
   // Path and filename of your result bundle.
@@ -112,9 +120,19 @@ module.exports = {
   plugins: [
     new VueLoaderPlugin(),
     new HtmlWebPackPlugin({
+      filename: './schedule.html',
+      template: './client/src/schedule.html',
+      chunks: ['schedule'],
+    }),
+    new HtmlWebPackPlugin({
       filename: './index.html',
       template: './client/src/index.html',
       chunks: ['index'],
+    }),
+    new HtmlWebPackPlugin({
+      filename: './new_task.html',
+      template: './client/src/new_task.html',
+      chunks: ['new_task'],
     }),
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoEmitOnErrorsPlugin(),

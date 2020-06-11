@@ -1,5 +1,11 @@
 <script>
-export default {};
+export default {
+  methods: {
+    goHome() {
+      window.location.href = '/schedule.html';
+    },
+  },
+};
 </script>
 
 <template>
@@ -7,7 +13,12 @@ export default {};
     class="w-full h-16 bg-nav-blue flex flex-row justify-between items-center fixed z-10"
   >
     <div class="ml-4 flex flex-row items-center">
-      <span class="text-white text-2xl font-semibold">TS PLUS</span>
+      <button
+        class="text-white text-2xl font-semibold focus:outline-none"
+        @click="goHome"
+      >
+        TS PLUS
+      </button>
     </div>
     <div class="mr-4 flex flex-row items-center">
       <svg

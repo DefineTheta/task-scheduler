@@ -1,25 +1,40 @@
 <script>
+import Vue from 'vue';
+
 import NavBar from './components/NavBar';
 import SideBar from './components/SideBar';
 import ExperienceBar from './components/ExperienceBar';
 import TaskContainer from './components/TaskContainer';
 
-var API = require('./utility/API.js');
+// Used to make API calls
+import API from './utility/API';
+
+// Used to pass data on events between different Vue components
+window.Event = new Vue();
 
 export default {
-  name: 'App',
+  name: 'Schedule',
   components: { NavBar, SideBar, ExperienceBar, TaskContainer },
   data() {
     return {
       workspaces: [],
       activeWorkspaceId: 2,
       activeUserId: 1,
+      activeUserType: 'manager',
     };
   },
   created() {
-    Event.$on('workspaceRetrieved', function (data) {
+    Event.$on('workspaceRetrieved', (data) => {
       this.workspaces = data;
     });
+
+    let cookie = JSON.parse(document.cookie);
+
+    if (cookie.account_type === 'worker') {
+      this.activeUserType = 'worker';
+    } else if (cookie.account_type === 'manager') {
+      this.activeUserType = 'manager';
+    }
 
     API.get('/api/v1/worker/workspaces', 'workspaceRetrieved');
   },
@@ -32,7 +47,11 @@ export default {
     <SideBar :workspaces="workspaces" :active-workspace-id="activeWorkspaceId"></SideBar>
     <div class="main mt-16 pt-10 flex flex-col items-center right-0 absolute right-0">
       <ExperienceBar></ExperienceBar>
-      <TaskContainer :user-id="activeUserId"></TaskContainer>
+      <TaskContainer
+        :user-id="activeUserId"
+        :user-type="activeUserType"
+        type="today"
+      ></TaskContainer>
     </div>
   </div>
 </template>
