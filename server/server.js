@@ -21,14 +21,14 @@ const startServer = async () => {
 
   await load(app);
 
-  // app.use(express.static(config.dist.path, { extensions: ['html'] }));
+  app.use(express.static(config.dist.path, { extensions: ['html'] }));
 
-  app.get('*', (req, res) => {
-    res.sendFile(config.dist.path + '/index.html');
-  });
+  // app.get('*', (req, res) => {
+  //   res.sendFile(config.dist.path + '/index.html');
+  // });
 
   // Start server and get it to listen to incomming connections
-  app.listen(PORT, err => {
+  app.listen(PORT, (err) => {
     if (err) {
       Logger.error(err);
       process.exit(1);

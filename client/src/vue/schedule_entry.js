@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import App from './App';
+import Schedule from './Schedule';
 
 /* eslint-disable no-undef */
 if (typeof module.hot !== 'undefined') {
@@ -9,5 +9,5 @@ if (typeof module.hot !== 'undefined') {
 
 new Vue({
   el: '#root',
-  render: (h) => h(App),
+  render: (h) => h(Schedule),
 });

@@ -1,4 +1,4 @@
-// import routes from '../api';
+import routes from '../api';
 import config from '../config';
 
 export default (app) => {
@@ -14,5 +14,5 @@ export default (app) => {
   });
 
   // Load API routes
-  // app.use(config.api.prefix, routes());
+  app.use(config.api.prefix, routes());
 };
