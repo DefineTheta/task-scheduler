@@ -100,9 +100,9 @@ CREATE PROCEDURE CheckManagerExists(
   in_pass VARCHAR(255)
 )
 BEGIN
-  SELECT COUNT(1)
+  SELECT manager_id
   FROM Managers
-  WHERE username = in_username AND pass = MD5(in_pass);
+  WHERE username = in_username AND pass = in_pass;
 END //
 DELIMITER ;
 
@@ -113,9 +113,9 @@ CREATE PROCEDURE CheckWorkerExists(
   in_pass VARCHAR(255)
 )
 BEGIN
-  SELECT COUNT(1)
+  SELECT worker_id
   FROM Workers
-  WHERE username = in_username AND pass = MD5(in_pass);
+  WHERE username = in_username AND pass = in_pass;
 END //
 DELIMITER ;
 
@@ -130,7 +130,11 @@ CREATE PROCEDURE NewManager(
 )
 BEGIN
   INSERT INTO Managers (first_name, last_name, email, username, pass)
-  VALUES (in_first_name, in_last_name, in_email, in_username, MD5(in_pass));
+  VALUES (in_first_name, in_last_name, in_email, in_username, in_pass);
+
+  SELECT manager_id
+  FROM Managers
+  WHERE manager_id = LAST_INSERT_ID();
 END //
 DELIMITER ;
 
@@ -149,7 +153,7 @@ BEGIN
   SET first_name = in_first_name,
   last_name = in_last_name,
   email = in_email,
-  pass = MD5(in_pass)
+  pass = in_pass
   WHERE manager_id = in_manager_id;
 END //
 DELIMITER ;
@@ -165,7 +169,11 @@ CREATE PROCEDURE NewWorker(
 )
 BEGIN
   INSERT INTO Workers (first_name, last_name, email, username, pass)
-  VALUES (in_first_name, in_last_name, in_email, in_username, MD5(in_pass));
+  VALUES (in_first_name, in_last_name, in_email, in_username, in_pass);
+
+  SELECT worker_id
+  FROM Workers
+  WHERE worker_id = LAST_INSERT_ID();
 END //
 DELIMITER ;
 

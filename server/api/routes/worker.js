@@ -1,9 +1,11 @@
 var express = require('express');
 
+import MySqlPool from 'Loaders/mysql';
+
 // Router used to route /api/v1/worker endpoints
 var workerRouter = express.Router();
 
-module.exports = function (apiRouter) {
+export default (apiRouter) => {
   apiRouter.use('/worker', workerRouter);
 
   // Create a new worker account
@@ -17,14 +19,37 @@ module.exports = function (apiRouter) {
   });
 
   // GET route used to retrive all the workspace a worker belongs to
-  workerRouter.get('/workspaces', function (req, res) {
-    var workspaces = [
-      { id: 1, name: '🎀 WOTBOS New York' },
-      { id: 2, name: '📜 Quest Workspaces' },
-      { id: 3, name: '🎶 The Farm SoHo NYC' },
-    ];
+  workerRouter.get('/workspaces', async (req, res) => {
+    // var workspaces = [
+    //   { id: 1, name: '🎀 WOTBOS New York' },
+    //   { id: 2, name: '📜 Quest Workspaces' },
+    //   { id: 3, name: '🎶 The Farm SoHo NYC' },
+    // ];
+    // res.json(workspaces);
 
-    res.json(workspaces);
+    let session = req.session;
+    if (session.test === undefined) {
+      session.test = 'Testing!';
+    } else {
+      console.log(session.test);
+    }
+
+    // const [errors, rows, fields] = await MySqlPool.query('CALL NewManager(?,?,?,?,?)', [
+    //   'Parthey',
+    //   'Baby',
+    //   'test@gmail.com',
+    //   'parthey_b',
+    //   'pass',
+    // ]);
+
+    // console.log('ERRORS!!!!');
+    // console.log(errors);
+    // console.log('ROWS!!!');
+    // console.log(rows);
+    // console.log('FIELDS!!!!');
+    // console.log(fields);
+
+    res.json({});
   });
 
   // GET route used to retrive today's tasks

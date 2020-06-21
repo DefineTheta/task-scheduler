@@ -52,10 +52,8 @@ module.exports = {
 
   resolve: {
     alias: {
-      Models: path.resolve(__dirname, 'server/models'),
       Services: path.resolve(__dirname, 'server/services'),
-      Jobs: path.resolve(__dirname, 'server/jobs'),
-      Data: path.resolve(__dirname, 'server/data'),
+      Loaders: path.resolve(__dirname, 'server/loaders'),
     },
   },
 };
