@@ -9,11 +9,21 @@ import baseRouter from '../api/baseRouter';
 // Import so express session can be used
 import Session from 'express-session';
 
+// Import mysql session store
+import expressMySqlSession from 'express-mysql-session';
+
+// A poll of connections to MySQL database used to make queries
+import MySQLPool from 'Loaders/mysql';
+
 export default (app) => {
+  // Setup the MySQL session store
+  const sessionStore = new expressMySqlSession({}, MySQLPool);
+
   // Setup sessions for express
   app.use(
     Session({
       secret: process.env.SESSION_SECRET,
+      store: sessionStore,
       resave: false,
       saveUninitialized: false,
     }),

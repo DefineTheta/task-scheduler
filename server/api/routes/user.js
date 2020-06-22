@@ -142,24 +142,30 @@ export default (baseRouter) => {
           res.status(401).json({ error: 'Invalid account information' });
         } else {
           let userID = undefined;
+          let workspaceID = undefined;
 
           try {
-            // If account being logged in to is for a manager
-            if (req.body.account_type === 0) {
-              const [rows] = await MySQLPool.query('CALL CheckManagerExists(?,?)', [
-                req.body.username,
-                req.body.pass,
+            const [rows] = await MySQLPool.query('CALL CheckUserExists(?,?,?)', [
+              req.body.username,
+              req.body.pass,
+              req.body.account_type,
+            ]);
+
+            if (rows[0].length === 1) {
+              userID = rows[0][0].manager_id;
+
+              // Get workspaces manager belongs to
+              const [
+                workspace_rows,
+              ] = await MySQLPool.query('CALL GetUserWorkspaces(?,?)', [
+                userID,
+                req.body.account_type,
               ]);
 
-              if (rows[0].length === 1) userID = rows[0][0].manager_id;
-            } else if (req.body.account_type === 1) {
-              // If account being logged in to is for a worker
-              const [rows] = await MySQLPool.query('CALL CheckWorkerExists(?,?)', [
-                req.body.username,
-                req.body.pass,
-              ]);
-
-              if (rows[0].length === 1) userID = rows[0][0].worker_id;
+              // Check if there are any workspaces at all
+              if (workspace_rows[0].length > 0) {
+                workspaceID = workspace_rows[0][0].workspace_id;
+              }
             }
 
             // No account with matching details found
@@ -170,6 +176,7 @@ export default (baseRouter) => {
               session.isUserLoggedIn = true;
               session.userID = userID;
               session.userType = req.body.account_type;
+              session.workspaceID = workspaceID;
 
               res.redirect('/scheduler');
             }
