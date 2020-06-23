@@ -5,38 +5,30 @@ import NavBar from './components/NavBar';
 import SideBar from './components/SideBar';
 import ExperienceBar from './components/ExperienceBar';
 import TaskContainer from './components/TaskContainer';
+import WorkspacePopUp from './components/WorkspacePopUp';
 
 // Used to make API calls
-import API from './utility/API';
+// import API from './utility/API';
 
 // Used to pass data on events between different Vue components
 window.Event = new Vue();
 
 export default {
   name: 'Schedule',
-  components: { NavBar, SideBar, ExperienceBar, TaskContainer },
+  components: { NavBar, SideBar, ExperienceBar, TaskContainer, WorkspacePopUp },
   data() {
     return {
       workspaces: [],
       activeWorkspaceId: 2,
       activeUserId: 1,
       activeUserType: 'manager',
+      workspacePopupActive: false,
     };
   },
   created() {
-    Event.$on('workspaceRetrieved', (data) => {
-      this.workspaces = data;
+    Event.$on('workspace-popup-button-clicked', () => {
+      this.workspacePopupActive = !this.workspacePopupActive;
     });
-
-    let cookie = JSON.parse(document.cookie);
-
-    if (cookie.account_type === 'worker') {
-      this.activeUserType = 'worker';
-    } else if (cookie.account_type === 'manager') {
-      this.activeUserType = 'manager';
-    }
-
-    API.get('/api/v1/worker/workspaces', 'workspaceRetrieved');
   },
 };
 </script>
@@ -53,6 +45,7 @@ export default {
         type="today"
       ></TaskContainer>
     </div>
+    <WorkspacePopUp v-if="workspacePopupActive"></WorkspacePopUp>
   </div>
 </template>
 

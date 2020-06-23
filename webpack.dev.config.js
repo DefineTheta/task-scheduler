@@ -10,6 +10,9 @@ const HtmlWebPackPlugin = require('html-webpack-plugin');
 // Plugin to load .vue files with webpack
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
+// Plugin to handle file moving and deleting
+// const FileManagerPlugin = require('filemanager-webpack-plugin');
+
 // This is main configuration object.
 // Here you write different options and tell Webpack what to do
 module.exports = {
@@ -32,7 +35,8 @@ module.exports = {
   // Webpack will bundle all JavaScript into this file
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: '[name].[hash:8].js',
+    filename: '[name].js',
+    publicPath: '/public/',
   },
 
   // Default mode for Webpack is production.

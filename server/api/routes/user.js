@@ -40,9 +40,9 @@ export default (baseRouter) => {
         .isLength({ min: 5, max: 30 })
         .withMessage('Username size needs to be between 5 and 30'),
       // Check that password is a valid hash
-      check('pass').isMD5().withMessage('The password is not hashed properly'),
+      check('pass').isMD5().withMessage('Chosen password is weak'),
       // Check that email is valid
-      check('email').isEmail().withMessage('Provided email is not a valid email'),
+      check('email').isEmail().withMessage('Provide a valid email address'),
       // Check that account type is a valid enum
       check('account_type')
         .isInt({ min: 0, max: 1 })
@@ -52,7 +52,9 @@ export default (baseRouter) => {
       let session = req.session;
 
       if (session.isUserLoggedIn === true) {
-        res.redirect('/scheduler');
+        // A way to redirect when using XHTTP
+        res.setHeader('xhttp-redirect', '/scheduler');
+        res.sendStatus(200);
       } else {
         const validationErrors = validationResult(req).formatWith(
           validationErrorFormatter,
@@ -98,7 +100,9 @@ export default (baseRouter) => {
               session.userID = userID;
               session.userType = req.body.account_type;
 
-              res.redirect('/scheduler');
+              // A way to redirect when using XHTTP
+              res.setHeader('xhttp-redirect', '/scheduler');
+              res.sendStatus(200);
             }
           } catch (error) {
             // Check what type of error occured
@@ -132,7 +136,9 @@ export default (baseRouter) => {
       let session = req.session;
 
       if (session.isUserLoggedIn === true) {
-        res.redirect('/scheduler');
+        // A way to redirect when using XHTTP
+        res.setHeader('xhttp-redirect', '/scheduler');
+        res.sendStatus(200);
       } else {
         const validationErrors = validationResult(req).formatWith(
           validationErrorFormatter,
@@ -152,7 +158,8 @@ export default (baseRouter) => {
             ]);
 
             if (rows[0].length === 1) {
-              userID = rows[0][0].manager_id;
+              if (req.body.account_type === 0) userID = rows[0][0].manager_id;
+              else if (req.body.account_type === 1) userID = rows[0][0].worker_id;
 
               // Get workspaces manager belongs to
               const [
@@ -178,7 +185,9 @@ export default (baseRouter) => {
               session.userType = req.body.account_type;
               session.workspaceID = workspaceID;
 
-              res.redirect('/scheduler');
+              // A way to redirect when using XHTTP
+              res.setHeader('xhttp-redirect', '/scheduler');
+              res.sendStatus(200);
             }
           } catch (error) {
             Logger.error(error);
@@ -199,7 +208,9 @@ export default (baseRouter) => {
         Logger.error(error);
         res.status(500).json({ success: false, error: 'Internal server error occured' });
       } else {
-        res.json({ success: true });
+        // Redirect to home
+        res.setHeader('xhttp-redirect', '/');
+        res.sendStatus(200);
       }
     });
   });

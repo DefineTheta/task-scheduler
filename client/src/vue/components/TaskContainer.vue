@@ -4,32 +4,19 @@ import TaskList from './TaskList';
 // Used to make API calls
 import API from '../utility/API';
 
+// Function to pad date numbers
+const pad = (n) => {
+  return n < 10 ? '0' + n : n;
+};
+
+// Function to get formated date
+const getDate = (date) => {
+  return `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${pad(date.getFullYear())}`;
+};
+
 export default {
   name: 'TaskContainer',
   components: { TaskList },
-  props: {
-    userId: {
-      type: Number,
-      required: true,
-      default: () => {
-        return -1;
-      },
-    },
-    userType: {
-      type: String,
-      required: true,
-      default: () => {
-        return '';
-      },
-    },
-    type: {
-      type: String,
-      require: true,
-      default: () => {
-        return 'today';
-      },
-    },
-  },
   data() {
     return {
       tab: 'all',
@@ -38,43 +25,90 @@ export default {
     };
   },
   computed: {
-    filteredTaskTimetable: (vm) => {
-      if (vm.tab === 'mine') {
-        return vm.taskTimetable.map((taskDay) => {
-          let filteredObj = { date: taskDay.date };
-          filteredObj.tasks = taskDay.tasks.filter((task) => {
-            return task.user === vm.userId;
-          });
+    organizedTimetable: (vm) => {
+      const tasks = vm.taskTimetable;
+      let taskArray = {};
+      let ta = [];
 
-          return filteredObj;
-        });
-      } else {
-        return vm.taskTimetable;
+      // Sort recieved tasks into seperate days
+      tasks.map((task) => {
+        if (task.date in taskArray) {
+          if (task.task_group_id === null) {
+            taskArray[task.date].tasks.push(task);
+          } else {
+            if (task.task_group_id in taskArray[task.date].groups) {
+              taskArray[task.date].groups[task.task_group_id].push(task);
+            } else {
+              taskArray[task.date].groups[task.task_group_id] = [task];
+            }
+          }
+        } else {
+          if (task.task_group_id === null) {
+            taskArray[task.date] = { tasks: [task], groups: {} };
+          } else {
+            let group = {};
+            group[task.task_group_id] = [task];
+
+            taskArray[task.date] = { tasks: [], groups: group };
+          }
+        }
+      });
+
+      for (const key in taskArray) {
+        let taskDay = taskArray[key];
+        let taskDayGroup = [];
+
+        for (const groupKey in taskDay.groups) {
+          let group = taskDay.groups[groupKey];
+          taskDayGroup.push({ name: group[0].task_group_title, tasks: group });
+        }
+
+        ta.push({ date: key, tasks: taskDay.tasks, groups: taskDayGroup });
       }
+
+      return ta;
     },
   },
   created() {
     Event.$on('tasksRetrieved', (data) => {
-      this.taskTimetable = data;
+      this.taskTimetable = data.tasks;
     });
 
     Event.$on('timeline-changed', (i) => {
       let timelines = ['today', 'week', 'all'];
 
-      API.get(
-        `/api/v1/${this.userType}/tasks?timeline=${timelines[i]}`,
-        'tasksRetrieved',
+      if (timelines[i] === 'today') {
+        API.get(`/task/today?date=${getDate(new Date())}`, 'tasksRetrieved', 200);
+      } else if (timelines[i] === 'all') {
+        API.get('/task/all', 'tasksRetrieved', 200);
+      } else if (timelines[i] === 'week') {
+        let dateSevenDays = new Date();
+        dateSevenDays.setDate(dateSevenDays.getDate() + 7);
+
+        API.get(
+          `/task/week?start_date=${getDate(new Date())}&end_date=${getDate(
+            dateSevenDays,
+          )}`,
+          'tasksRetrieved',
+          200,
+        );
+      }
+    });
+
+    Event.$on('task-deleted', (data) => {
+      this.taskTimetable = this.taskTimetable.filter(
+        (task) => task.task_id !== data.task_id,
       );
     });
 
-    API.get(`/api/v1/${this.userType}/tasks?timeline=today`, 'tasksRetrieved');
+    API.get(`/task/today?date=${getDate(new Date())}`, 'tasksRetrieved', 200);
   },
   methods: {
     changeTab() {
       this.tab = this.tab === 'all' ? 'mine' : 'all';
     },
     addNewTask() {
-      window.location.href = '/new_task.html';
+      window.location.href = '/create';
     },
   },
 };
@@ -124,9 +158,10 @@ export default {
       </button>
     </div>
     <TaskList
-      v-for="taskDay in filteredTaskTimetable"
+      v-for="taskDay in organizedTimetable"
       :key="taskDay.date"
       :tasks="taskDay.tasks"
+      :groups="taskDay.groups"
       :date="taskDay.date"
     ></TaskList>
   </div>

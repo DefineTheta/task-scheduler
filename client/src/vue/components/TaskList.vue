@@ -40,17 +40,24 @@ export default {
         return [];
       },
     },
-    date: {
-      type: Number,
+    groups: {
+      type: Array,
       required: true,
       default: () => {
-        return 0;
+        return [];
+      },
+    },
+    date: {
+      type: String,
+      required: true,
+      default: () => {
+        return '';
       },
     },
   },
   computed: {
     taskDay: (vm) => {
-      let convertedDate = new Date(vm.date * 1000);
+      let convertedDate = new Date(vm.date);
 
       if (isToday(convertedDate)) return 'Today';
       if (isTomorrow(convertedDate)) return 'Tomorrow';
@@ -58,7 +65,7 @@ export default {
       return convertedDate.toLocaleString('en-us', { weekday: 'long' });
     },
     taskDate: (vm) => {
-      let convertedDate = new Date(vm.date * 1000);
+      let convertedDate = new Date(vm.date);
 
       return convertedDate.toLocaleString('en-us', { day: '2-digit', month: 'short' });
     },
@@ -74,6 +81,7 @@ export default {
     </div>
     <Task
       v-for="(task, i) in tasks"
+      :id="task.task_id"
       :key="i"
       :title="task.title"
       :color="task.color"

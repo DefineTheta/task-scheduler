@@ -40,6 +40,36 @@ export default (app) => {
     res.status(200).end();
   });
 
+  app.get('/', (req, res) => {
+    let session = req.session;
+
+    if (session.isUserLoggedIn === true) {
+      res.redirect('/scheduler');
+    } else {
+      res.sendFile('index.html', { root: config.dist.path });
+    }
+  });
+
+  app.get('/scheduler', (req, res) => {
+    let session = req.session;
+
+    if (session.isUserLoggedIn === true) {
+      res.sendFile('schedule.html', { root: config.dist.path });
+    } else {
+      res.redirect('/');
+    }
+  });
+
+  app.get('/create', (req, res) => {
+    let session = req.session;
+
+    if (session.isUserLoggedIn === true && session.userType === 0) {
+      res.sendFile('new_task.html', { root: config.dist.path });
+    } else {
+      res.redirect('/');
+    }
+  });
+
   // Load API data routes
   app.use(config.api.prefix, apiRouter());
 

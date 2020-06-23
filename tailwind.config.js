@@ -33,6 +33,7 @@ module.exports = {
         120: '30rem',
       },
       maxWidth: {
+        80: '20rem',
         160: '40rem',
       },
       minHeight: {
@@ -58,7 +59,9 @@ module.exports = {
       backgroundColor: {
         'nav-blue': '#232943',
         'side-grey': '#E6E6E6',
+        'textbox-grey': '#F5F5F5',
         'highlight-grey': '#D8D8D8',
+        'black-transparent': 'rgba(0, 0, 0, 0.4)',
       },
       textColor: {
         'black-primary': 'rgba(0, 0, 0, 0.87)',

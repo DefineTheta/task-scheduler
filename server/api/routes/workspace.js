@@ -42,6 +42,8 @@ export default (baseRouter) => {
       } else {
         // Update session workspace ID and respond with a positive confirmation
         session.workspaceID = req.body.workspace_id;
+        // A way to redirect when using XHTTP
+        res.setHeader('xhttp-redirect', '/scheduler');
         res.sendStatus(200);
       }
     },
@@ -68,6 +70,28 @@ export default (baseRouter) => {
         }
 
         res.json({ workspaces: rows[0], active: session.workspaceID });
+      } catch (error) {
+        Logger.error(error);
+        res.status(500).json({ error: 'Internal server error occured' });
+      }
+    }
+  });
+
+  // GET route used to get all workers from a workspace
+  workspaceRouter.get('/workers', async (req, res) => {
+    let session = req.session;
+
+    // Check if the user is logged in or not and check if the user is a manager
+    if (session.isUserLoggedIn !== true || session.userType !== 0) {
+      res.status(401).json({ success: false, error: 'Unauthorized access' });
+    } else {
+      try {
+        // Run a stored procedure to get all workers from workspace
+        const [rows] = await MySQLPool.query(`CALL GetAllWorkspaceWorkers(?)`, [
+          session.workspaceID,
+        ]);
+
+        res.json({ workers: rows[0] });
       } catch (error) {
         Logger.error(error);
         res.status(500).json({ error: 'Internal server error occured' });
@@ -134,14 +158,25 @@ export default (baseRouter) => {
         });
       } else {
         try {
-          // Run a stored procedure to join a workspace
-          const [rows] = await MySQLPool.query('CALL JoinWorkspace(?,?,?)', [
+          // Run a stored procedure to check if current user is actually a part of the workspace
+          const [user_rows] = await MySQLPool.query(`CALL IsUserInWorkspace(?,?,?)`, [
             req.body.workspace_id,
             session.userID,
             session.userType,
           ]);
 
-          res.sendStatus(200);
+          if (user_rows[0][0].count > 0) {
+            res.status(400).json({ error: 'Already in this workspace' });
+          } else {
+            // Run a stored procedure to join a workspace
+            const [rows] = await MySQLPool.query('CALL JoinWorkspace(?,?,?)', [
+              req.body.workspace_id,
+              session.userID,
+              session.userType,
+            ]);
+
+            res.sendStatus(200);
+          }
         } catch (error) {
           Logger.error(error);
           res.status(500).json({ error: 'Internal server error occured' });
@@ -177,7 +212,69 @@ export default (baseRouter) => {
             `%${req.body.workspace_name}%`,
           ]);
 
-          res.json(rows[0]);
+          res.json({ workspaces: rows[0] });
+        } catch (error) {
+          Logger.error(error);
+          res.status(500).json({ error: 'Internal server error occured' });
+        }
+      }
+    },
+  );
+
+  // DELETE route used to remove a workspace
+  workspaceRouter.delete(
+    '/',
+    [
+      // Check that workspace id is numeric and greater than 0
+      check('workspace_id').isNumeric({ min: 0, max: undefined }),
+    ],
+    async (req, res) => {
+      let session = req.session;
+
+      const validationErrors = validationResult(req).formatWith(validationErrorFormatter);
+
+      // Check if the user is logged in or not and check if the user is a manager
+      if (session.isUserLoggedIn !== true || session.userType !== 0) {
+        res.status(401).json({ success: false, error: 'Unauthorized access' });
+      } else if (validationErrors.isEmpty() === false) {
+        res.status(422).json({
+          success: false,
+          error: 'Workspace name needs to be greater than 4 letters',
+        });
+      } else {
+        try {
+          // Run a stored procedure to check if current user is actually a part of the workspace
+          const [user_rows] = await MySQLPool.query(`CALL IsUserInWorkspace(?,?,?)`, [
+            req.body.workspace_id,
+            session.userID,
+            0,
+          ]);
+
+          if (user_rows[0][0].count !== 1) {
+            res.status(401).json({ success: false, error: 'Unauthorized access' });
+          } else {
+            // Run a stored procedure to delete a workspace
+            const [rows] = await MySQLPool.query('CALL DeleteWorkspace(?)', [
+              req.body.workspace_id,
+            ]);
+
+            // If deleted workspace was the active workspace remove it from session
+            if (session.workspaceID == req.body.workspace_id)
+              session.workspaceID = undefined;
+
+            // Get workspaces manager belongs to
+            const [workspace_rows] = await MySQLPool.query(
+              'CALL GetUserWorkspaces(?,?)',
+              [session.userID, session.userType],
+            );
+
+            // Check if there are any workspaces at all
+            if (workspace_rows[0].length > 0 && session.workspaceID === undefined) {
+              session.workspaceID = workspace_rows[0][0].workspace_id;
+            }
+
+            res.json({ workspaces: workspace_rows[0], active: session.workspaceID });
+          }
         } catch (error) {
           Logger.error(error);
           res.status(500).json({ error: 'Internal server error occured' });

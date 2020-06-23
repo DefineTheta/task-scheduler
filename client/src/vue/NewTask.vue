@@ -3,7 +3,7 @@ import Vue from 'vue';
 import datepicker from 'vue-date-picker';
 
 import NavBar from './components/NavBar';
-import Task from './components/Task';
+import Task from './components/NewTaskComponent';
 
 // Used to make API calls
 import API from './utility/API';
@@ -16,28 +16,44 @@ export default {
   components: { NavBar, Task, datepicker },
   data() {
     return {
-      activeUserId: 1,
-      title: 'Untitled Task',
-      date: '',
-      assignedUser: -1,
+      title: '',
+      assignedUser: null,
+      color: '',
       workspaceUsers: [],
-      color: 'navy',
+      creationErrors: {},
+      creationErrorPresent: false,
     };
   },
   created() {
     Event.$on('worspace-users-retrived', (data) => {
-      this.workspaceUsers = data;
+      this.workspaceUsers = data.workers;
     });
 
-    API.get('/api/v1/manager/workspaces/workers', 'worspace-users-retrived');
+    Event.$on('task-creation-failed', (data) => {
+      this.creationErrorPresent = true;
+      this.creationErrors = data.errors;
+    });
+
+    API.get('/workspace/workers', 'worspace-users-retrived', 200);
   },
   methods: {
     createTask() {
-      //Perform AJAX request here
-      window.location.href = '/schedule.html';
+      API.post(
+        '/task',
+        {
+          task_name: this.title,
+          task_date: this.$refs.date._data.pickedValue,
+          task_worker: this.assignedUser,
+          task_color: this.color,
+        },
+        'task-creation-failed',
+        422,
+        400,
+        'task-creation-failed',
+      );
     },
     goHome() {
-      window.location.href = '/schedule.html';
+      window.location.href = '/scheduler';
     },
   },
 };
@@ -50,18 +66,28 @@ export default {
       class="main w-full mt-16 pt-10 flex flex-col items-center right-0 absolute right-0"
     >
       <div class="w-162 h-16 min-h-16 px-5 py-4 bg-white rounded shadow-4dp">
-        <Task :title="title" :color="color" :completed="false"></Task>
+        <Task :title="title" :color="color" :completed="0"></Task>
       </div>
       <div
         class="w-162 mt-8 mb-10 px-3 pt-2 pb-4 flex flex-col bg-white rounded shadow-4dp"
       >
         <span class="font-bold text-xl">Create New Task</span>
+        <div v-if="creationErrorPresent" class="mt-2">
+          <li
+            v-for="(error, i) in creationErrors"
+            :key="i"
+            class="text-sm text-red-600 font-semibold"
+          >
+            {{ error }}
+          </li>
+        </div>
         <form class="mt-2" onsubmit="return false;">
           <input
             v-model="title"
             type="text"
             name="title"
-            class="w-144 h-10 px-2 text-sm font-semibold bg-side-grey focus:outline-none"
+            class="w-144 h-10 px-2 text-sm font-semibold bg-side-grey focus:outline-none placeholder-gray-600"
+            placeholder="Untitled Task"
           />
           <div class="mt-3 flex flex-row items-center">
             <div class="flex flex-col">
@@ -81,8 +107,7 @@ export default {
                 <label for="Date" class="ml-2 text-sm font-semibold">Date:</label>
               </div>
               <datepicker
-                v-model="date"
-                :value="date"
+                ref="date"
                 name="date"
                 format="DD-MM-YYYY"
                 :input-class="[
@@ -117,9 +142,9 @@ export default {
                 >
                   <option
                     v-for="user in workspaceUsers"
-                    :key="user.id"
-                    :value="user.id"
-                    >{{ user.name }}</option
+                    :key="user.worker_id"
+                    :value="user.worker_id"
+                    >{{ user.first_name + ' ' + user.last_name }}</option
                   >
                 </select>
                 <svg

@@ -32,9 +32,6 @@ export default {
     class="w-74 h-screen px-3 py-4 bg-side-grey flex flex-col items-center shadow-4dp fixed top-16"
   >
     <TimelineSelecter></TimelineSelecter>
-    <WorkspaceSelector
-      :workspaces="workspaces"
-      :active-workspace-id="activeWorkspaceId"
-    ></WorkspaceSelector>
+    <WorkspaceSelector></WorkspaceSelector>
   </div>
 </template>
