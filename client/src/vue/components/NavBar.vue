@@ -10,6 +10,9 @@ export default {
     logout() {
       API.post('/logout', {}, undefined);
     },
+    setting() {
+      Event.$emit('settings-popup-button-clicked');
+    },
   },
 };
 </script>
@@ -40,7 +43,7 @@ export default {
           fill="white"
         />
       </svg>
-      <button title="Settings" class="ml-6 focus:outline-none" @click="setting()">
+      <button title="Settings" class="ml-6 focus:outline-none" @click="setting">
         <svg
           width="28"
           height="28"
@@ -54,7 +57,7 @@ export default {
           />
         </svg>
       </button>
-      <button title="Logout" class="ml-6 focus:outline-none" @click="logout()">
+      <button title="Logout" class="ml-6 focus:outline-none" @click="logout">
         <svg
           width="28"
           height="28"

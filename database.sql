@@ -133,26 +133,6 @@ BEGIN
 END //
 DELIMITER ;
 
--- Used to update a manager's information --
-DELIMITER //
-CREATE PROCEDURE UpdateManager(
-  in_manager_id INT,
-  in_first_name VARCHAR(255),
-  in_last_name VARCHAR(255),
-  in_email VARCHAR(255),
-  in_username VARCHAR(30),
-  in_pass VARCHAR(255)
-)
-BEGIN
-  UPDATE Managers
-  SET first_name = in_first_name,
-  last_name = in_last_name,
-  email = in_email,
-  pass = in_pass
-  WHERE manager_id = in_manager_id;
-END //
-DELIMITER ;
-
 -- Used to create a new entry in workers table when new worker signs up --
 DELIMITER //
 CREATE PROCEDURE NewWorker(
@@ -177,23 +157,54 @@ BEGIN
 END //
 DELIMITER ;
 
--- Used to update a worker's information --
+-- Used to get user proile information --
 DELIMITER //
-CREATE PROCEDURE UpdateWorker(
-  in_worker_id INT,
+CREATE PROCEDURE GetProfileInformation(
+  in_user_type VARCHAR(255),
+  in_user_id VARCHAR(255)
+)
+BEGIN
+  IF in_user_type = 0 THEN
+    SELECT first_name, last_name, email, username
+    FROM Managers
+    WHERE manager_id = in_user_id;
+  ELSEIF in_user_type = 1 THEN
+    SELECT Workers.first_name, Workers.last_name, Workers.email, Workers.username, Worker_Settings.availibility
+    FROM Workers INNER JOIN Worker_Settings
+    ON Workers.worker_id =  Worker_Settings.worker_id
+    WHERE Workers.worker_id = in_user_id;
+  END IF;
+END //
+DELIMITER ;
+
+-- Used to update a user's profile --
+DELIMITER //
+CREATE PROCEDURE UpdateUserProfile(
+  in_user_id INT,
+  in_user_type INT,
   in_first_name VARCHAR(255),
   in_last_name VARCHAR(255),
   in_email VARCHAR(255),
   in_username VARCHAR(30),
-  in_pass VARCHAR(255)
+  in_pass VARCHAR(255),
+  in_worker_availibility VARCHAR(7)
 )
 BEGIN
-  UPDATE Workers
-  SET first_name = in_first_name,
-  last_name = in_last_name,
-  email = in_email,
-  pass = MD5(in_pass)
-  WHERE worker_id = in_worker_id;
+  IF in_user_type = 0 THEN
+    UPDATE Managers
+    SET first_name = in_first_name,
+    last_name = in_last_name,
+    email = in_email,
+    pass = in_pass
+    WHERE manager_id = in_user_id;
+  ELSEIF in_user_type = 1 THEN
+    UPDATE Workers
+    SET first_name = in_first_name,
+    last_name = in_last_name,
+    email = in_email,
+    pass = in_pass
+    WHERE worker_id = in_user_id;
+  END IF;
 END //
 DELIMITER ;
 
@@ -344,7 +355,8 @@ BEGIN
     AND Tasks.worker_id = in_worker_id
     AND Tasks.task_date = STR_TO_DATE(in_today_date, '%d-%m-%Y');
   ELSE
-    SELECT Tasks.task_id as task_id,
+    SELECT Tasks.worker_id as worker_id,
+    Tasks.task_id as task_id,
     Tasks.title as title,
     Tasks.color as color,
     Tasks.completed as completed,
@@ -388,7 +400,8 @@ BEGIN
     AND Tasks.task_date >= STR_TO_DATE(in_start_date, '%d-%m-%Y') AND Tasks.task_date <= STR_TO_DATE(in_end_date, '%d-%m-%Y')
     ORDER BY Tasks.task_date ASC;
   ELSE
-    SELECT Tasks.task_id as task_id,
+    SELECT Tasks.worker_id as worker_id,
+    Tasks.task_id as task_id,
     Tasks.title as title,
     Tasks.color as color,
     Tasks.completed as completed,
@@ -430,7 +443,8 @@ BEGIN
     AND Tasks.worker_id = in_worker_id
     ORDER BY Tasks.task_date ASC;
   ELSE
-    SELECT Tasks.task_id as task_id,
+    SELECT Tasks.worker_id as worker_id,
+    Tasks.task_id as task_id,
     Tasks.title as title,
     Tasks.color as color,
     Tasks.completed as completed,

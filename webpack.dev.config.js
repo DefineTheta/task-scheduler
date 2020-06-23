@@ -22,9 +22,13 @@ module.exports = {
       'webpack-hot-middleware/client?path=/__webpack_hmr',
       './client/src/vue/index_entry.js',
     ],
-    schedule: [
+    manager_scheduler: [
       'webpack-hot-middleware/client?path=/__webpack_hmr',
-      './client/src/vue/schedule_entry.js',
+      './client/src/vue/scheduler_manager_entry.js',
+    ],
+    worker_scheduler: [
+      'webpack-hot-middleware/client?path=/__webpack_hmr',
+      './client/src/vue/scheduler_worker_entry.js',
     ],
     new_task: [
       'webpack-hot-middleware/client?path=/__webpack_hmr',
@@ -124,9 +128,14 @@ module.exports = {
   plugins: [
     new VueLoaderPlugin(),
     new HtmlWebPackPlugin({
-      filename: './schedule.html',
+      filename: './manager_scheduler.html',
       template: './client/src/schedule.html',
-      chunks: ['schedule'],
+      chunks: ['manager_scheduler'],
+    }),
+    new HtmlWebPackPlugin({
+      filename: './worker_scheduler.html',
+      template: './client/src/schedule.html',
+      chunks: ['worker_scheduler'],
     }),
     new HtmlWebPackPlugin({
       filename: './index.html',

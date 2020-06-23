@@ -61,7 +61,12 @@ webpack([serverWebpackConfig, clientWebpackConfig], (err, stats) => {
     console.warn(info.warnings);
   }
 
-  const filenames = ['index.js', 'schedule.js', 'new_task.js'];
+  const filenames = [
+    'index.js',
+    'manager_scheduler.js',
+    'worker_scheduler.js',
+    'new_task.js',
+  ];
 
   // Move generated javascript files
   filenames.map(function (filename) {

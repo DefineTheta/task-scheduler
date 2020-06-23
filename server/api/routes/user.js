@@ -214,4 +214,100 @@ export default (baseRouter) => {
       }
     });
   });
+
+  // GET route used to retrieve current user id
+  userRouter.get('/user/id', async (req, res) => {
+    let session = req.session;
+
+    if (session.isUserLoggedIn === true) {
+      res.json({ user_id: session.userID });
+    } else {
+      res.sendStatus(401);
+    }
+  });
+
+  // GET route used to retrieve user profile
+  userRouter.get('/profile', async (req, res) => {
+    let session = req.session;
+
+    if (session.isUserLoggedIn === true) {
+      try {
+        const [rows] = await MySQLPool.query('CALL GetProfileInformation(?,?)', [
+          session.userType,
+          session.userID,
+        ]);
+
+        res.json({ profile: rows[0][0] });
+      } catch (error) {
+        Logger.error(error);
+        res.status(500).json({ error: 'Internal server error occured' });
+      }
+    } else {
+      res.sendStatus(401);
+    }
+  });
+
+  // GET route used to retrieve user profile
+  userRouter.put(
+    '/profile',
+    [
+      // Check that first name is not empty
+      check('first_name').not().isEmpty().withMessage('First name can not be empty'),
+      // Check that the first name only contains alphabets
+      check('first_name')
+        .isAlpha()
+        .withMessage('First name can only contain letters (a-zA-Z)'),
+      // Check that last name is not empty
+      check('last_name').not().isEmpty().withMessage('Last name can not be empty'),
+      // Check that last name only contains alphabets
+      check('last_name')
+        .isAlpha()
+        .withMessage('Last name can only contain letters (a-zA-Z)'),
+      // Check that username is of valid length
+      check('username')
+        .isLength({ min: 5, max: 30 })
+        .withMessage('Username size needs to be between 5 and 30'),
+      // Check that password is a valid hash
+      check('pass').isMD5().withMessage('Chosen password is weak'),
+      // Check that email is valid
+      check('email').isEmail().withMessage('Provide a valid email address'),
+    ],
+    async (req, res) => {
+      let session = req.session;
+
+      if (session.isUserLoggedIn === true) {
+        const validationErrors = validationResult(req).formatWith(
+          validationErrorFormatter,
+        );
+
+        if (validationErrors.isEmpty() === false) {
+          res.status(422).json({ errors: validationErrors.array() });
+        } else {
+          try {
+            const availability = '1111111';
+
+            const [
+              rows,
+            ] = await MySQLPool.query('CALL UpdateUserProfile(?,?,?,?,?,?,?,?)', [
+              session.userID,
+              session.userType,
+              req.body.first_name,
+              req.body.last_name,
+              req.body.email,
+              req.body.username,
+              req.body.pass,
+              availability,
+            ]);
+
+            res.sendStatus(200);
+          } catch (error) {
+            Logger.error(error);
+            res.status(500).json({ error: 'Internal server error occured' });
+          }
+        }
+      } else {
+        res.sendStatus(401);
+      }
+    },
+  );
 };

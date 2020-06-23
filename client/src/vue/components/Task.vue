@@ -77,7 +77,7 @@ export default {
     @mouseenter="taskMouseEnter"
     @mouseleave="taskMouseLeave"
   >
-    <div class="ml-2">
+    <div class="ml-2 flex flex-row items-center">
       <button class="focus:outline-none" @click="toggleTaskStatus">
         <svg
           width="16"

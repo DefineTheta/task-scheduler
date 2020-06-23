@@ -2,7 +2,7 @@
 import TaskList from './TaskList';
 
 // Used to make API calls
-import API from '../utility/API';
+import API from '../../utility/API';
 
 // Function to pad date numbers
 const pad = (n) => {
@@ -19,6 +19,7 @@ export default {
   components: { TaskList },
   data() {
     return {
+      userID: null,
       tab: 'all',
       tabStyle: 'p-3 font-semibold border-r-2 border-grey-dark focus:outline-none',
       taskTimetable: [],
@@ -32,24 +33,26 @@ export default {
 
       // Sort recieved tasks into seperate days
       tasks.map((task) => {
-        if (task.date in taskArray) {
-          if (task.task_group_id === null) {
-            taskArray[task.date].tasks.push(task);
-          } else {
-            if (task.task_group_id in taskArray[task.date].groups) {
-              taskArray[task.date].groups[task.task_group_id].push(task);
+        if ((vm.tab === 'mine' && task.worker_id == vm.userID) || vm.tab === 'all') {
+          if (task.date in taskArray) {
+            if (task.task_group_id === null) {
+              taskArray[task.date].tasks.push(task);
             } else {
-              taskArray[task.date].groups[task.task_group_id] = [task];
+              if (task.task_group_id in taskArray[task.date].groups) {
+                taskArray[task.date].groups[task.task_group_id].push(task);
+              } else {
+                taskArray[task.date].groups[task.task_group_id] = [task];
+              }
             }
-          }
-        } else {
-          if (task.task_group_id === null) {
-            taskArray[task.date] = { tasks: [task], groups: {} };
           } else {
-            let group = {};
-            group[task.task_group_id] = [task];
+            if (task.task_group_id === null) {
+              taskArray[task.date] = { tasks: [task], groups: {} };
+            } else {
+              let group = {};
+              group[task.task_group_id] = [task];
 
-            taskArray[task.date] = { tasks: [], groups: group };
+              taskArray[task.date] = { tasks: [], groups: group };
+            }
           }
         }
       });
@@ -72,6 +75,10 @@ export default {
   created() {
     Event.$on('tasksRetrieved', (data) => {
       this.taskTimetable = data.tasks;
+    });
+
+    Event.$on('userIDRetrieved', (data) => {
+      this.userID = data.user_id;
     });
 
     Event.$on('timeline-changed', (i) => {
@@ -102,6 +109,7 @@ export default {
     });
 
     API.get(`/task/today?date=${getDate(new Date())}`, 'tasksRetrieved', 200);
+    API.get('/user/id', 'userIDRetrieved', 200);
   },
   methods: {
     changeTab() {
@@ -124,30 +132,13 @@ export default {
         >
           All Tasks
         </button>
-      </div>
-      <button
-        class="border-l-2 border-grey-dark flex flex-row items-center focus:outline-none"
-        @click="addNewTask"
-      >
-        <svg
-          class="ml-3"
-          width="21"
-          height="20"
-          viewBox="0 0 21 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+        <button
+          :class="[tabStyle, tab === 'mine' && 'font-bold bg-white']"
+          @click="tab = 'mine'"
         >
-          <path
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-            d="M11.55 6H9.45V9H6.3V11H9.45V14H11.55V11H14.7V9H11.55V6ZM18.9 14H21V6H18.9V14ZM18.9 18H16.8V20H21V16H18.9V18ZM16.8 0V2H18.9V4H21V0H16.8ZM0 14H2.10001V6H0V14ZM2.10001 16H0V20H4.2V18H2.10001V16ZM0 0V4H2.10001V2H4.2V0H0ZM6.3 20H14.7V18H6.3V20ZM6.3 2H14.7V0H6.3V2Z"
-            fill="black"
-          />
-        </svg>
-        <span class="p-3 font-semibold">
-          New Task
-        </span>
-      </button>
+          My Tasks
+        </button>
+      </div>
     </div>
     <TaskList
       v-for="taskDay in organizedTimetable"

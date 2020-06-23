@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import Schedule from './Schedule';
+import Schedule from './WorkerScheduler';
 
 /* eslint-disable no-undef */
 if (typeof module.hot !== 'undefined') {

@@ -26,7 +26,7 @@ export default {
   },
   methods: {
     submitForm() {
-      const pass = this.password.length >= 7 ? md5(this.password) : '';
+      const pass = this.password.length >= 5 ? md5(this.password) : '';
       let account_type = null;
 
       if (this.accountType === 'manager') {

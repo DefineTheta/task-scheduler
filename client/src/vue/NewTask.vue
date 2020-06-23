@@ -3,7 +3,7 @@ import Vue from 'vue';
 import datepicker from 'vue-date-picker';
 
 import NavBar from './components/NavBar';
-import Task from './components/NewTaskComponent';
+import Task from './components/worker/Task';
 
 // Used to make API calls
 import API from './utility/API';

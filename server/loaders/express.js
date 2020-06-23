@@ -54,7 +54,11 @@ export default (app) => {
     let session = req.session;
 
     if (session.isUserLoggedIn === true) {
-      res.sendFile('schedule.html', { root: config.dist.path });
+      if (session.userType === 0) {
+        res.sendFile('manager_scheduler.html', { root: config.dist.path });
+      } else if (session.userType === 1) {
+        res.sendFile('worker_scheduler.html', { root: config.dist.path });
+      }
     } else {
       res.redirect('/');
     }
