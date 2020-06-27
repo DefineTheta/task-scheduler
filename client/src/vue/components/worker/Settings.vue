@@ -47,6 +47,13 @@ export default {
       this.lastName = data.profile.last_name;
       this.email = data.profile.email;
       this.username = data.profile.username;
+
+      for (let i = 0; i < data.profile.availability.length; ++i) {
+        const shouldBeChecked =
+          data.profile.availability.charAt(i) === '1' ? true : false;
+
+        this.dayChecked[this.days[i]] = shouldBeChecked;
+      }
     });
 
     API.get('/profile', 'profile-information-recieved', 200);
@@ -57,6 +64,13 @@ export default {
     },
     submitForm() {
       const pass = this.password.length > 5 ? md5(this.password) : '';
+      let availability = '';
+
+      for (const key in this.dayChecked) {
+        const dayCheckbox = this.dayChecked[key];
+
+        dayCheckbox === true ? (availability += '1') : (availability += '0');
+      }
 
       API.put(
         '/profile',
@@ -66,6 +80,7 @@ export default {
           email: this.email,
           username: this.username,
           pass: pass,
+          availability: availability,
         },
         'profile-update-success',
         200,

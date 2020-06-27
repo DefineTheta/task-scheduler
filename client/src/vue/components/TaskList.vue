@@ -1,5 +1,6 @@
 <script>
 import Task from './Task';
+import GroupTaskList from './GroupTaskList';
 
 const isToday = (date) => {
   let today = new Date();
@@ -31,7 +32,7 @@ const isTomorrow = (date) => {
 };
 
 export default {
-  components: { Task },
+  components: { Task, GroupTaskList },
   props: {
     tasks: {
       type: Array,
@@ -87,5 +88,11 @@ export default {
       :color="task.color"
       :completed="task.completed"
     ></Task>
+    <GroupTaskList
+      v-for="(group, i) in groups"
+      :key="i"
+      :name="group.name"
+      :tasks="group.tasks"
+    ></GroupTaskList>
   </div>
 </template>

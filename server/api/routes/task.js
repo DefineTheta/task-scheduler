@@ -84,22 +84,51 @@ export default (baseRouter) => {
           } else if (worker_rows[0][0].count !== 1) {
             res.status(422).json({ errors: ['Assigned worker invalid'] });
           } else {
-            // Run a stored procedure to create a new task
-            const [rows] = await MySQLPool.query('CALL NewTask(?,?,?,?,?)', [
-              session.workspaceID,
+            const date = new Date();
+
+            date.setDate(Number(req.body.task_date.slice(0, 2)));
+            date.setMonth(Number(req.body.task_date.slice(3, 5)) - 1);
+            date.setYear(Number(req.body.task_date.slice(6, 10)));
+
+            // Run a stored procedure to retrieve assigned worker's availability
+            const [
+              availability_rows,
+            ] = await MySQLPool.query(`CALL GetWorkerAvailabilty(?)`, [
               req.body.task_worker,
-              req.body.task_name,
-              req.body.task_color,
-              req.body.task_date,
             ]);
 
-            // Check if the task was actually created in database
-            if (rows.affectedRows === 0) {
-              res.status(400).json({ errors: ['Task was not created'] });
+            // Check if the assigned worker can actually work on this day
+            if (
+              availability_rows[0].length === 0 ||
+              availability_rows[0][0].availability.charAt(date.getDay() - 1) === '0'
+            ) {
+              res
+                .status(422)
+                .json({ errors: ['Assigned worker can not work on this date'] });
             } else {
-              // A way to redirect when using XHTTP
-              res.setHeader('xhttp-redirect', '/scheduler');
-              res.sendStatus(200);
+              const group_id =
+                req.body.task_group_id === null || req.body.task_group_id < 0
+                  ? -1
+                  : req.body.task_group_id;
+
+              // Run a stored procedure to create a new task
+              const [rows] = await MySQLPool.query('CALL NewTask(?,?,?,?,?,?)', [
+                session.workspaceID,
+                req.body.task_worker,
+                group_id,
+                req.body.task_name,
+                req.body.task_color,
+                req.body.task_date,
+              ]);
+
+              // Check if the task was actually created in database
+              if (rows.affectedRows === 0) {
+                res.status(400).json({ errors: ['Task was not created'] });
+              } else {
+                // A way to redirect when using XHTTP
+                res.setHeader('xhttp-redirect', '/scheduler');
+                res.sendStatus(200);
+              }
             }
           }
         } catch (error) {
@@ -453,4 +482,78 @@ export default (baseRouter) => {
       }
     }
   });
+
+  // POST route used to search for a task group
+  taskRouter.post(
+    '/group/search',
+    [
+      // Check that group name is of valid length
+      check('task_group_name').isLength({ min: 4, max: 255 }),
+    ],
+    async (req, res) => {
+      let session = req.session;
+
+      const validationErrors = validationResult(req).formatWith(validationErrorFormatter);
+
+      // Check if the user is logged in or not
+      if (session.isUserLoggedIn !== true) {
+        res.status(401).json({ success: false, error: 'Unauthorized access' });
+      } else if (validationErrors.isEmpty() === false) {
+        res.status(422).json({
+          success: false,
+          error: 'Group name needs to be greater than 4 letters',
+        });
+      } else {
+        try {
+          // Run a stored procedure to search for a group
+          const [rows] = await MySQLPool.query('CALL SearchForTaskGroup(?, ?)', [
+            session.workspaceID,
+            `%${req.body.task_group_name}%`,
+          ]);
+
+          res.json({ groups: rows[0] });
+        } catch (error) {
+          Logger.error(error);
+          res.status(500).json({ error: 'Internal server error occured' });
+        }
+      }
+    },
+  );
+
+  // POST route used to create a new task groups
+  taskRouter.post(
+    '/group',
+    [
+      // Check that workspace name is of valid length
+      check('task_group_name').isLength({ min: 4, max: 255 }),
+    ],
+    async (req, res) => {
+      let session = req.session;
+
+      const validationErrors = validationResult(req).formatWith(validationErrorFormatter);
+
+      // Check if the user is logged in or not and check if the user is a manager
+      if (session.isUserLoggedIn !== true || session.userType !== 0) {
+        res.status(401).json({ success: false, error: 'Unauthorized access' });
+      } else if (validationErrors.isEmpty() === false) {
+        res.status(422).json({
+          success: false,
+          error: 'Group name needs to be greater than 4 letters',
+        });
+      } else {
+        try {
+          // Run a stored procedure to create a new workspace
+          const [rows] = await MySQLPool.query('CALL CreateNewTaskGroup(?,?)', [
+            session.workspaceID,
+            req.body.task_group_name,
+          ]);
+
+          res.json({ task_group_id: rows[0][0].task_group_id });
+        } catch (error) {
+          Logger.error(error);
+          res.status(500).json({ error: 'Internal server error occured' });
+        }
+      }
+    },
+  );
 };

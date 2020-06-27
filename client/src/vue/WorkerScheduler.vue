@@ -3,7 +3,6 @@ import Vue from 'vue';
 
 import NavBar from './components/NavBar';
 import SideBar from './components/worker/SideBar';
-import ExperienceBar from './components/ExperienceBar';
 import TaskContainer from './components/worker/TaskContainer';
 import WorkspacePopUp from './components/worker/WorkspacePopUp';
 import Settings from './components/worker/Settings';
@@ -16,7 +15,7 @@ window.Event = new Vue();
 
 export default {
   name: 'WorkerScheduler',
-  components: { NavBar, SideBar, ExperienceBar, TaskContainer, WorkspacePopUp, Settings },
+  components: { NavBar, SideBar, TaskContainer, WorkspacePopUp, Settings },
   data() {
     return {
       workspacePopupActive: false,
@@ -40,7 +39,6 @@ export default {
     <NavBar></NavBar>
     <SideBar></SideBar>
     <div class="main mt-16 pt-10 flex flex-col items-center right-0 absolute right-0">
-      <ExperienceBar></ExperienceBar>
       <TaskContainer type="today"></TaskContainer>
     </div>
     <WorkspacePopUp v-if="workspacePopupActive"></WorkspacePopUp>

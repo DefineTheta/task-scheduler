@@ -33,7 +33,7 @@ CREATE TABLE `Workers` (
 DROP TABLE IF EXISTS `Worker_Settings`;
 CREATE TABLE `Worker_Settings` (
   worker_id INT NOT NULL,
-  availibility VARCHAR(7) NOT NULL DEFAULT '1111111',
+  availability VARCHAR(7) NOT NULL DEFAULT '1111111',
   PRIMARY KEY (worker_id)
 );
 
@@ -80,7 +80,7 @@ DROP TABLE IF EXISTS `Task_Groups`;
 CREATE TABLE `Task_Groups` (
   task_group_id INT NOT NULL AUTO_INCREMENT,
   workspace_id INT NOT NULL, 
-  title VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
   PRIMARY KEY (task_group_id),
   FOREIGN KEY (workspace_id) REFERENCES Workspaces(workspace_id) ON DELETE CASCADE
 );
@@ -148,7 +148,7 @@ BEGIN
 
   SET @inserted_worker_id = LAST_INSERT_ID();
 
-  INSERT INTO Worker_Settings (worker_id, availibility)
+  INSERT INTO Worker_Settings (worker_id, availability)
   VALUES (@inserted_worker_id, "1111111");
 
   SELECT worker_id
@@ -169,11 +169,23 @@ BEGIN
     FROM Managers
     WHERE manager_id = in_user_id;
   ELSEIF in_user_type = 1 THEN
-    SELECT Workers.first_name, Workers.last_name, Workers.email, Workers.username, Worker_Settings.availibility
+    SELECT Workers.first_name, Workers.last_name, Workers.email, Workers.username, Worker_Settings.availability
     FROM Workers INNER JOIN Worker_Settings
     ON Workers.worker_id =  Worker_Settings.worker_id
     WHERE Workers.worker_id = in_user_id;
   END IF;
+END //
+DELIMITER ;
+
+-- Used to get worker availability information --
+DELIMITER //
+CREATE PROCEDURE GetWorkerAvailabilty(
+  in_worker_id INT
+)
+BEGIN
+  SELECT availability
+  FROM Worker_Settings
+  WHERE worker_id = in_worker_id;
 END //
 DELIMITER ;
 
@@ -187,7 +199,7 @@ CREATE PROCEDURE UpdateUserProfile(
   in_email VARCHAR(255),
   in_username VARCHAR(30),
   in_pass VARCHAR(255),
-  in_worker_availibility VARCHAR(7)
+  in_worker_availability VARCHAR(7)
 )
 BEGIN
   IF in_user_type = 0 THEN
@@ -204,19 +216,23 @@ BEGIN
     email = in_email,
     pass = in_pass
     WHERE worker_id = in_user_id;
+
+    UPDATE Worker_Settings
+    SET availability = in_worker_availability
+    WHERE worker_id = in_user_id;
   END IF;
 END //
 DELIMITER ;
 
--- Used to update a workers's availibility --
+-- Used to update a workers's availability --
 DELIMITER //
-CREATE PROCEDURE UpdateWorkerAvailibility(
+CREATE PROCEDURE UpdateWorkeravailability(
   in_worker_id INT,
-  in_availibility VARCHAR(255)
+  in_availability VARCHAR(255)
 )
 BEGIN
   UPDATE Worker_Settings
-  SET availibility = in_availibility
+  SET availability = in_availability
   WHERE worker_id = in_worker_id;
 END //
 DELIMITER ;
@@ -346,7 +362,7 @@ BEGIN
     Tasks.completed as completed,
     Tasks.task_date as date,
     Task_Groups.task_group_id as task_group_id,
-    Task_Groups.title as task_group_title
+    Task_Groups.name as task_group_title
     FROM Tasks LEFT JOIN Tasks_Groups
     ON Tasks.task_id = Tasks_Groups.task_id
     LEFT JOIN Task_Groups
@@ -362,7 +378,7 @@ BEGIN
     Tasks.completed as completed,
     Tasks.task_date as date,
     Task_Groups.task_group_id as task_group_id,
-    Task_Groups.title as task_group_title
+    Task_Groups.name as task_group_title
     FROM Tasks LEFT JOIN Tasks_Groups
     ON Tasks.task_id = Tasks_Groups.task_id
     LEFT JOIN Task_Groups
@@ -390,7 +406,7 @@ BEGIN
     Tasks.completed as completed,
     Tasks.task_date as date,
     Task_Groups.task_group_id as task_group_id,
-    Task_Groups.title as task_group_title
+    Task_Groups.name as task_group_title
     FROM Tasks LEFT JOIN Tasks_Groups
     ON Tasks.task_id = Tasks_Groups.task_id
     LEFT JOIN Task_Groups
@@ -407,7 +423,7 @@ BEGIN
     Tasks.completed as completed,
     Tasks.task_date as date,
     Task_Groups.task_group_id as task_group_id,
-    Task_Groups.title as task_group_title
+    Task_Groups.name as task_group_title
     FROM Tasks LEFT JOIN Tasks_Groups
     ON Tasks.task_id = Tasks_Groups.task_id
     LEFT JOIN Task_Groups
@@ -434,7 +450,7 @@ BEGIN
     Tasks.completed as completed,
     Tasks.task_date as date,
     Task_Groups.task_group_id as task_group_id,
-    Task_Groups.title as task_group_title
+    Task_Groups.name as task_group_title
     FROM Tasks LEFT JOIN Tasks_Groups
     ON Tasks.task_id = Tasks_Groups.task_id
     LEFT JOIN Task_Groups
@@ -450,7 +466,7 @@ BEGIN
     Tasks.completed as completed,
     Tasks.task_date as date,
     Task_Groups.task_group_id as task_group_id,
-    Task_Groups.title as task_group_title
+    Task_Groups.name as task_group_title
     FROM Tasks LEFT JOIN Tasks_Groups
     ON Tasks.task_id = Tasks_Groups.task_id
     LEFT JOIN Task_Groups
@@ -468,7 +484,7 @@ BEGIN
   SELECT Workers.worker_id as worker_id,
   Workers.first_name as first_name,
   Workers.last_name as last_name,
-  Worker_Settings.availibility as worker_availibility
+  Worker_Settings.availability as worker_availability
   FROM Workspaces_Workers INNER JOIN Workers
   ON Workspaces_Workers.worker_id = Workers.worker_id
   INNER JOIN Worker_Settings
@@ -482,19 +498,10 @@ DELIMITER //
 CREATE PROCEDURE GetAllWorkspaceTaskGroups(in_workspace_id INT)
 BEGIN
   SELECT Task_Groups.task_group_id as task_group_id,
-  Task_Groups.title as task_group_title
+  Task_Groups.name as task_group_title
   FROM Workspaces INNER JOIN Task_Groups
   ON Workspaces.workspace_id = Task_Groups.workspace_id
   WHERE Workspaces.workspace_id = in_workspace_id;
-END //
-DELIMITER ;
-
--- Used to create a new task group --
-DELIMITER //
-CREATE PROCEDURE NewTaskGroup(in_title VARCHAR(255), in_workspace_id INT)
-BEGIN
-  INSERT INTO Task_Groups (workspace_id, title)
-  VALUES (in_workspace_id, in_title);
 END //
 DELIMITER ;
 
@@ -503,13 +510,22 @@ DELIMITER //
 CREATE PROCEDURE NewTask(
   in_workspace_id INT,
   in_worker_id INT,
+  in_group_task_id INT,
   in_title VARCHAR(255),
   in_color VARCHAR(255),
   in_date VARCHAR(255)
 )
 BEGIN
-  INSERT INTO Tasks (workspace_id, worker_id, title, color, task_date)
-  VALUES (in_workspace_id, in_worker_id, in_title, in_color, STR_TO_DATE(in_date, '%d-%m-%Y'));
+  IF in_group_task_id <> -1 THEN
+    INSERT INTO Tasks (workspace_id, worker_id, title, color, task_date)
+    VALUES (in_workspace_id, in_worker_id, in_title, in_color, STR_TO_DATE(in_date, '%d-%m-%Y'));
+
+    INSERT INTO Tasks_Groups (task_id, task_group_id)
+    VALUES (LAST_INSERT_ID(), in_group_task_id);
+  ELSE
+    INSERT INTO Tasks (workspace_id, worker_id, title, color, task_date)
+    VALUES (in_workspace_id, in_worker_id, in_title, in_color, STR_TO_DATE(in_date, '%d-%m-%Y'));
+  END IF;
 END //
 DELIMITER ;
 
@@ -566,6 +582,36 @@ BEGIN
   INSERT INTO Tasks_ps
   SET task_group_id = in_task_group_id,
   task_id = LAST_INSERT_ID();
+END //
+DELIMITER ;
+
+-- Used to search for a task group --
+DELIMITER //
+CREATE PROCEDURE SearchForTaskGroup(in_workspace_id INT, in_group_name VARCHAR(255))
+BEGIN
+  SELECT Task_Groups.workspace_id as workspace_id,
+  Task_Groups.task_group_id as task_group_id,
+  Task_Groups.name as task_group_name
+  FROM Task_Groups
+  WHERE Task_Groups.workspace_id = in_workspace_id
+  AND Task_Groups.name LIKE in_group_name
+  LIMIT 5;
+END //
+DELIMITER ;
+
+-- Used to a create new task group --
+DELIMITER //
+CREATE PROCEDURE CreateNewTaskGroup(
+  in_workspace_id INT,
+  in_group_name VARCHAR(255)
+)
+BEGIN
+  INSERT INTO Task_Groups (workspace_id, name)
+  VALUES (in_workspace_id, in_group_name);
+
+  SELECT Task_Groups.task_group_id as task_group_id
+  FROM Task_Groups
+  WHERE Task_Groups.task_group_id =  LAST_INSERT_ID();
 END //
 DELIMITER ;
 

@@ -16,6 +16,13 @@ const validationErrorFormatter = ({ msg }) => {
   return msg;
 };
 
+// Custome validator to availabilty length
+const isLength = (value) => {
+  if (value === undefined || value === null) return false;
+  if (value.length !== 7) return false;
+  else return true;
+};
+
 export default (baseRouter) => {
   baseRouter.use('/', userRouter);
 
@@ -271,6 +278,10 @@ export default (baseRouter) => {
       check('pass').isMD5().withMessage('Chosen password is weak'),
       // Check that email is valid
       check('email').isEmail().withMessage('Provide a valid email address'),
+      // Check that availability is not empty
+      check('availability')
+        .custom(isLength, 7)
+        .withMessage('Availability is not in a valid format'),
     ],
     async (req, res) => {
       let session = req.session;
@@ -284,8 +295,6 @@ export default (baseRouter) => {
           res.status(422).json({ errors: validationErrors.array() });
         } else {
           try {
-            const availability = '1111111';
-
             const [
               rows,
             ] = await MySQLPool.query('CALL UpdateUserProfile(?,?,?,?,?,?,?,?)', [
@@ -296,7 +305,7 @@ export default (baseRouter) => {
               req.body.email,
               req.body.username,
               req.body.pass,
-              availability,
+              req.body.availability,
             ]);
 
             res.sendStatus(200);

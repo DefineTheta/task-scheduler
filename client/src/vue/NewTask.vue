@@ -4,6 +4,7 @@ import datepicker from 'vue-date-picker';
 
 import NavBar from './components/NavBar';
 import Task from './components/worker/Task';
+import GroupPopUp from './components/GroupPopUp';
 
 // Used to make API calls
 import API from './utility/API';
@@ -13,15 +14,17 @@ window.Event = new Vue();
 
 export default {
   name: 'NewTask',
-  components: { NavBar, Task, datepicker },
+  components: { NavBar, Task, datepicker, GroupPopUp },
   data() {
     return {
       title: '',
       assignedUser: null,
+      selectedTaskGroup: null,
       color: '',
       workspaceUsers: [],
       creationErrors: {},
       creationErrorPresent: false,
+      groupPopUpActive: false,
     };
   },
   created() {
@@ -32,6 +35,18 @@ export default {
     Event.$on('task-creation-failed', (data) => {
       this.creationErrorPresent = true;
       this.creationErrors = data.errors;
+    });
+
+    Event.$on('group-popup-button-clicked', () => {
+      this.groupPopUpActive = false;
+    });
+
+    Event.$on('group-popup-button-clicked', () => {
+      this.groupPopUpActive = false;
+    });
+
+    Event.$on('task-group-selected', (id) => {
+      this.selectedTaskGroup = id;
     });
 
     API.get('/workspace/workers', 'worspace-users-retrived', 200);
@@ -45,6 +60,7 @@ export default {
           task_date: this.$refs.date._data.pickedValue,
           task_worker: this.assignedUser,
           task_color: this.color,
+          task_group_id: this.selectedTaskGroup,
         },
         'task-creation-failed',
         422,
@@ -55,6 +71,7 @@ export default {
     goHome() {
       window.location.href = '/scheduler';
     },
+    addToGroup() {},
   },
 };
 </script>
@@ -209,23 +226,34 @@ export default {
               </div>
             </div>
           </div>
-          <div class="mt-4 felx flex-row items-center">
-            <button
-              class="w-32 h-8 submit-btn font-semibold focus:outline-none"
-              @click="createTask"
-            >
-              Create
-            </button>
-            <button
-              class="w-32 h-8 ml-2 cancel-btn font-semibold focus:outline-none"
-              @click="goHome"
-            >
-              Cancel
-            </button>
+          <div class="w-full mt-4 flex flex-row justify-between items-center">
+            <div class="felx flex-row items-center">
+              <button
+                class="w-32 h-8 submit-btn font-semibold focus:outline-none"
+                @click="createTask"
+              >
+                Create
+              </button>
+              <button
+                class="w-32 h-8 ml-2 cancel-btn font-semibold focus:outline-none"
+                @click="goHome"
+              >
+                Cancel
+              </button>
+            </div>
+            <div class="felx flex-row items-center">
+              <button
+                class="w-32 h-8 border-2 border-solid border-blue-500 rounded font-semibold focus:outline-none"
+                @click="groupPopUpActive = true"
+              >
+                Add To Group
+              </button>
+            </div>
           </div>
         </form>
       </div>
     </div>
+    <GroupPopUp v-if="groupPopUpActive"></GroupPopUp>
   </div>
 </template>
 
