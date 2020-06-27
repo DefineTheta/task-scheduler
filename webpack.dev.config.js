@@ -18,29 +18,16 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin');
 module.exports = {
   // Path to your entry point. From this file Webpack will begin his work
   entry: {
-    index: [
-      'webpack-hot-middleware/client?path=/__webpack_hmr',
-      './client/src/vue/index_entry.js',
-    ],
-    manager_scheduler: [
-      'webpack-hot-middleware/client?path=/__webpack_hmr',
-      './client/src/vue/scheduler_manager_entry.js',
-    ],
-    worker_scheduler: [
-      'webpack-hot-middleware/client?path=/__webpack_hmr',
-      './client/src/vue/scheduler_worker_entry.js',
-    ],
-    new_task: [
-      'webpack-hot-middleware/client?path=/__webpack_hmr',
-      './client/src/vue/new_task_entry.js',
-    ],
+    index: ['./client/src/vue/index_entry.js'],
+    manager_scheduler: ['./client/src/vue/scheduler_manager_entry.js'],
+    worker_scheduler: ['./client/src/vue/scheduler_worker_entry.js'],
+    new_task: ['./client/src/vue/new_task_entry.js'],
   },
   // Path and filename of your result bundle.
   // Webpack will bundle all JavaScript into this file
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',
-    publicPath: '/public/',
   },
 
   // Default mode for Webpack is production.
@@ -147,8 +134,6 @@ module.exports = {
       template: './client/src/new_task.html',
       chunks: ['new_task'],
     }),
-    new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoEmitOnErrorsPlugin(),
   ],
 
   // These are settings for how modules are resolved
