@@ -1,22 +1,53 @@
 <script>
+// MD5 hash package to hash the password
+import md5 from 'md5';
+
 // Used to make API calls
 import API from '../utility/API';
 
 export default {
   data() {
     return {
-      accountType: 'manager',
+      firstName: '',
+      lastName: '',
+      email: '',
+      username: '',
+      password: '',
+      accountType: '',
+      joinErrors: [],
+      joinErrorPresent: false,
     };
   },
   created() {
-    Event.$on('join-complete', (data) => {
-      document.cookie = JSON.stringify(data);
-      window.location.href = '/schedule.html';
+    Event.$on('join-failed', (data) => {
+      this.joinErrorPresent = true;
+      this.joinErrors = data.errors;
     });
   },
   methods: {
     submitForm() {
-      API.post(`/api/v1/${this.accountType}/join`, {}, 'join-complete');
+      const pass = this.password.length >= 5 ? md5(this.password) : '';
+      let account_type = null;
+
+      if (this.accountType === 'manager') {
+        account_type = 0;
+      } else if (this.accountType === 'worker') {
+        account_type = 1;
+      }
+
+      API.post(
+        `/join`,
+        {
+          first_name: this.firstName,
+          last_name: this.lastName,
+          email: this.email,
+          username: this.username,
+          pass,
+          account_type,
+        },
+        'join-failed',
+        422,
+      );
     },
   },
 };
@@ -27,11 +58,19 @@ export default {
     class="min-w-120 max-w-160 mx-4 py-4 pl-4 flex flex-col bg-side-grey rounded shadow-4dp"
   >
     <span class="text-4xl font-bold text-red-500">JOIN NOW!</span>
+    <li
+      v-for="(error, i) in joinErrors"
+      :key="i"
+      class="text-sm text-red-600 font-semibold"
+    >
+      {{ error }}
+    </li>
     <form class="mt-4 w-full flex flex-col" onsubmit="return false;">
       <div class="flex flex-row">
         <div class="flex flex-col">
           <label for="first_name" class="font-semibold">First Name:</label>
           <input
+            v-model="firstName"
             type="text"
             name="first_name"
             class="w-56 h-10 mt-2 px-1 text-sm font-semibold focus:outline-none"
@@ -40,6 +79,7 @@ export default {
         <div class="pl-2 flex flex-col">
           <label for="last_name" class="font-semibold">Last Name:</label>
           <input
+            v-model="lastName"
             type="text"
             name="last_name"
             class="w-56 h-10 mt-2 px-1 text-sm font-semibold focus:outline-none"
@@ -48,6 +88,7 @@ export default {
       </div>
       <label for="email" class="mt-4 font-semibold">Email:</label>
       <input
+        v-model="email"
         type="email"
         name="email"
         class="w-100 h-10 mt-1 px-1 text-sm font-semibold focus:outline-none"
@@ -56,6 +97,7 @@ export default {
         <div class="flex flex-col">
           <label for="username" class="font-semibold">Username:</label>
           <input
+            v-model="username"
             type="text"
             name="username"
             class="w-56 h-10 mt-2 px-1 text-sm font-semibold focus:outline-none"
@@ -64,6 +106,7 @@ export default {
         <div class="pl-2 flex flex-col">
           <label for="pass" class="font-semibold">Password:</label>
           <input
+            v-model="password"
             type="password"
             name="pass"
             class="w-56 h-10 mt-2 px-1 text-sm font-semibold focus:outline-none"

@@ -1,6 +1,9 @@
 // Used to bundle code
 const webpack = require('webpack');
 
+// Used to move files
+var mv = require('mv');
+
 // Get different configration files to tell webpack how to bundle files
 const serverWebpackConfig = require('../webpack.server.config');
 const clientWebpackConfig =
@@ -57,6 +60,22 @@ webpack([serverWebpackConfig, clientWebpackConfig], (err, stats) => {
   if (stats.hasWarnings()) {
     console.warn(info.warnings);
   }
+
+  const filenames = [
+    'index.js',
+    'manager_scheduler.js',
+    'worker_scheduler.js',
+    'new_task.js',
+  ];
+
+  // Move generated javascript files
+  filenames.map(function (filename) {
+    mv('./dist/' + filename, './dist/public/' + filename, { mkdirp: true }, function (
+      err,
+    ) {
+      if (err !== undefined) console.log(err);
+    });
+  });
 
   if (!stats.hasErrors() && !stats.hasWarnings()) {
     startServer('dist/server.js', (err) => console.log(err));

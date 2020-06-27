@@ -19,7 +19,7 @@ export default (app) => {
     app.use(
       webpackDevMiddleware(compiler, {
         stats: 'minimal',
-        publicPath: '/',
+        publicPath: '/public/',
       }),
     );
 

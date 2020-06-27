@@ -10,6 +10,7 @@ if (!envFound) {
 }
 
 const DIST_DIR = path.resolve(__dirname, '../dist/');
+const PUBLIC_DIST_DIR = path.resolve(__dirname, '../dist/public');
 const HTML_FILE = path.join(DIST_DIR, 'index.html');
 
 export default {
@@ -21,6 +22,7 @@ export default {
   },
   dist: {
     path: DIST_DIR,
+    public_path: PUBLIC_DIST_DIR,
   },
   editor: {
     path: HTML_FILE,

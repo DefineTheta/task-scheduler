@@ -1,6 +1,6 @@
 <script>
 // Used to make API calls
-import API from '../utility/API';
+import API from '../../utility/API';
 
 export default {
   name: 'WorkspaceSelector',
@@ -8,17 +8,12 @@ export default {
     return {
       workspaces: [],
       activeWorkspaceId: null,
-      hoverWorkspaceId: null,
     };
   },
   created() {
     Event.$on('workspace-data-recieved', (data) => {
       this.workspaces = data.workspaces;
       this.activeWorkspaceId = data.active;
-    });
-
-    Event.$on('workspace-creation-success', () => {
-      API.get('/workspace', 'workspace-data-recieved', 200);
     });
 
     Event.$on('workspace-join-success', () => {
@@ -30,15 +25,6 @@ export default {
   methods: {
     popupButtonClicked() {
       Event.$emit('workspace-popup-button-clicked');
-    },
-    workspaceMouseEnter(id) {
-      this.hoverWorkspaceId = id;
-    },
-    workspaceMouseLeave() {
-      this.hoverWorkspaceId = null;
-    },
-    removeWorkspace(id) {
-      API.del('/workspace', { workspace_id: id }, 'workspace-data-recieved', 200);
     },
     changeWorkspace(id) {
       API.put('/workspace/change', { workspace_id: id });
@@ -70,7 +56,7 @@ export default {
         </svg>
       </button>
     </div>
-    <div
+    <span
       v-for="workspace in workspaces"
       :key="workspace.workspace_id"
       class="w-full mt-1 py-1 flex flex-row justify-between items-center font-semibold cursor-pointer workspace-item"
@@ -79,32 +65,10 @@ export default {
           activeWorkspaceId === workspace.workspace_id,
         'text-black-secondary': activeWorkspaceId !== workspace.workspace_id,
       }"
-      @mouseenter="workspaceMouseEnter(workspace.workspace_id)"
-      @mouseleave="workspaceMouseLeave"
       @click="changeWorkspace(workspace.workspace_id)"
     >
-      <span>
-        {{ workspace.workspace_name }}
-      </span>
-      <button
-        v-if="hoverWorkspaceId === workspace.workspace_id"
-        class="mr-2 focus:outline-none"
-        @click="removeWorkspace(workspace.workspace_id)"
-      >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 14 14"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M4.20002 1.4L5.60002 0H8.40002L9.80002 1.4H12.6V2.8H1.40002V1.4H4.20002ZM2.10002 4.2H11.9L11.2 14H2.80002L2.10002 4.2ZM5.60002 5.6V12.6H6.30002V5.6H5.60002ZM7.70002 5.6V12.6H8.40002V5.6H7.70002Z"
-            fill="black"
-          />
-        </svg>
-      </button>
-    </div>
+      {{ workspace.workspace_name }}
+    </span>
   </div>
 </template>
 

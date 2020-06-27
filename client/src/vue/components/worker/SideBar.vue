@@ -1,5 +1,5 @@
 <script>
-import TimelineSelecter from './TimelineSelecter';
+import TimelineSelecter from '../TimelineSelecter';
 import WorkspaceSelector from './WorkspaceSelector';
 
 export default {

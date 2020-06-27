@@ -1,14 +1,13 @@
 import express from 'express';
 
 // Used to validate any params recieved from client
-import { check, validationResult } from 'express-validator';
+import { check, query, validationResult } from 'express-validator';
 
 // A poll of connections to MySQL database used to make queries
 import MySQLPool from 'Loaders/mysql';
 
 // Import Winston logger instance to log messages to console
 import Logger from 'Loaders/logger';
-import baseRouter from '../baseRouter';
 
 const taskRouter = express.Router();
 
@@ -19,6 +18,7 @@ const validationErrorFormatter = ({ msg }) => {
 
 // Custome validator to check if dates are valid
 const isDate = (value) => {
+  if (value === undefined || value === null) return false;
   if (!value.match(/^\d{2}-\d{2}-\d{4}$/)) return false;
   else return true;
 };
@@ -44,7 +44,7 @@ export default (baseRouter) => {
         .withMessage('Assigned user is not valid'),
       // Check that the color is not empty
       check('task_color')
-        .isIn(['Navy', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Teal', 'Purple'])
+        .isIn(['navy', 'red', 'orange', 'yellow', 'green', 'blue', 'teal', 'purple'])
         .withMessage('Color provided is not allowed'),
     ],
     async (req, res) => {
@@ -61,7 +61,6 @@ export default (baseRouter) => {
         res.status(401).json({ success: false, error: 'Unauthorized access' });
       } else if (validationErrors.isEmpty() === false) {
         res.status(422).json({
-          success: false,
           errors: validationErrors.array(),
         });
       } else {
@@ -81,23 +80,56 @@ export default (baseRouter) => {
           ]);
 
           if (user_rows[0][0].count !== 1) {
-            res.status(401).json({ success: false, error: 'Unauthorized access' });
+            res.status(401).json({ error: 'Unauthorized access' });
           } else if (worker_rows[0][0].count !== 1) {
-            res.status(422).json({ success: false, error: 'Assigned worker invalid' });
+            res.status(422).json({ errors: ['Assigned worker invalid'] });
           } else {
-            // Run a stored procedure to create a new task
-            const [rows] = await MySQLPool.query('CALL NewTask(?,?,?,?,?)', [
-              session.workspaceID,
+            const date = new Date();
+
+            date.setDate(Number(req.body.task_date.slice(0, 2)));
+            date.setMonth(Number(req.body.task_date.slice(3, 5)) - 1);
+            date.setYear(Number(req.body.task_date.slice(6, 10)));
+
+            // Run a stored procedure to retrieve assigned worker's availability
+            const [
+              availability_rows,
+            ] = await MySQLPool.query(`CALL GetWorkerAvailabilty(?)`, [
               req.body.task_worker,
-              req.body.task_name,
-              req.body.task_color,
-              req.body.task_date,
             ]);
 
-            // Check if the task was actually created in database
-            if (rows.affectedRows === 0)
-              res.status(400).json({ error: 'Task was not created' });
-            else res.sendStatus(200);
+            // Check if the assigned worker can actually work on this day
+            if (
+              availability_rows[0].length === 0 ||
+              availability_rows[0][0].availability.charAt(date.getDay() - 1) === '0'
+            ) {
+              res
+                .status(422)
+                .json({ errors: ['Assigned worker can not work on this date'] });
+            } else {
+              const group_id =
+                req.body.task_group_id === null || req.body.task_group_id < 0
+                  ? -1
+                  : req.body.task_group_id;
+
+              // Run a stored procedure to create a new task
+              const [rows] = await MySQLPool.query('CALL NewTask(?,?,?,?,?,?)', [
+                session.workspaceID,
+                req.body.task_worker,
+                group_id,
+                req.body.task_name,
+                req.body.task_color,
+                req.body.task_date,
+              ]);
+
+              // Check if the task was actually created in database
+              if (rows.affectedRows === 0) {
+                res.status(400).json({ errors: ['Task was not created'] });
+              } else {
+                // A way to redirect when using XHTTP
+                res.setHeader('xhttp-redirect', '/scheduler');
+                res.sendStatus(200);
+              }
+            }
           }
         } catch (error) {
           Logger.error(error);
@@ -152,7 +184,7 @@ export default (baseRouter) => {
             // Check if the task was actually removed
             if (rows.affectedRows === 0)
               res.status(400).json({ error: 'Task was not deleted' });
-            else res.sendStatus(200);
+            else res.json({ task_id: req.body.task_id });
           }
         } catch (error) {
           Logger.error(error);
@@ -270,7 +302,6 @@ export default (baseRouter) => {
         res.status(401).json({ success: false, error: 'Unauthorized access' });
       } else if (validationErrors.isEmpty() === false) {
         res.status(422).json({
-          success: false,
           errors: validationErrors.array(),
         });
       } else {
@@ -296,7 +327,7 @@ export default (baseRouter) => {
             // Check if the task was actually updated
             if (rows.affectedRows === 0)
               res.status(400).json({ error: 'Task status was not updated' });
-            else res.sendStatus(200);
+            else res.json({ task_id: req.body.task_id });
           }
         } catch (error) {
           Logger.error(error);
@@ -306,12 +337,12 @@ export default (baseRouter) => {
     },
   );
 
-  // GET route used to get workspaces that the user belongs to
+  // GET route used to get all tasks from today
   taskRouter.get(
     '/today',
     [
-      // Check that date is not empty
-      check('today_date').not().isEmpty().withMessage('A date is required'),
+      // Check that date valid
+      query('date').custom(isDate).withMessage('Date provided is not in valid format'),
     ],
     async (req, res) => {
       let session = req.session;
@@ -323,7 +354,6 @@ export default (baseRouter) => {
         res.status(401).json({ success: false, error: 'Unauthorized access' });
       } else if (validationErrors.isEmpty() === false) {
         res.status(422).json({
-          success: false,
           errors: validationErrors.array(),
         });
       } else {
@@ -338,18 +368,187 @@ export default (baseRouter) => {
           ]);
 
           if (user_rows[0].length !== 1) {
-            res.status(401).json({ success: false, error: 'Unauthorized access' });
+            res.status(401).json({ error: 'Unauthorized access' });
           } else {
             // Run a stored procedure to get all tasks from today for a specific workspace
             const [rows] = await MySQLPool.query(`CALL GetAllTodayTasks(?,?,?,?)`, [
               session.workspaceID,
-              req.body.today_date,
+              req.query.date,
               onlyCurrentUserTasks,
               session.userID,
             ]);
 
-            res.json(rows[0]);
+            res.json({ tasks: rows[0] });
           }
+        } catch (error) {
+          Logger.error(error);
+          res.status(500).json({ error: 'Internal server error occured' });
+        }
+      }
+    },
+  );
+
+  // GET route used to get all tasks from comming week
+  taskRouter.get(
+    '/week',
+    [
+      // Check that start date valid
+      query('start_date')
+        .custom(isDate)
+        .withMessage('Start date provided is not in valid format'),
+      // Check that end date valid
+      query('end_date')
+        .custom(isDate)
+        .withMessage('End date provided is not in valid format'),
+    ],
+    async (req, res) => {
+      let session = req.session;
+
+      const validationErrors = validationResult(req).formatWith(validationErrorFormatter);
+
+      // Check if the user is logged in or not
+      if (session.isUserLoggedIn !== true || session.workspaceID === undefined) {
+        res.status(401).json({ success: false, error: 'Unauthorized access' });
+      } else if (validationErrors.isEmpty() === false) {
+        res.status(422).json({
+          errors: validationErrors.array(),
+        });
+      } else {
+        const onlyCurrentUserTasks = req.query.mine === true ? true : false;
+
+        try {
+          // Run a stored procedure to check if current user is actually a part of the workspace
+          const [user_rows] = await MySQLPool.query(`CALL IsUserInWorkspace(?,?,?)`, [
+            session.workspaceID,
+            session.userID,
+            session.userType,
+          ]);
+
+          if (user_rows[0].length !== 1) {
+            res.status(401).json({ error: 'Unauthorized access' });
+          } else {
+            // Run a stored procedure to get all tasks from today for a specific workspace
+            const [rows] = await MySQLPool.query(`CALL GetAllWeekTasks(?,?,?,?,?)`, [
+              session.workspaceID,
+              req.query.start_date,
+              req.query.end_date,
+              onlyCurrentUserTasks,
+              session.userID,
+            ]);
+
+            res.json({ tasks: rows[0] });
+          }
+        } catch (error) {
+          Logger.error(error);
+          res.status(500).json({ error: 'Internal server error occured' });
+        }
+      }
+    },
+  );
+
+  // GET route used to get all tasks in a workspace
+  taskRouter.get('/all', async (req, res) => {
+    let session = req.session;
+
+    // Check if the user is logged in or not
+    if (session.isUserLoggedIn !== true || session.workspaceID === undefined) {
+      res.status(401).json({ success: false, error: 'Unauthorized access' });
+    } else {
+      const onlyCurrentUserTasks = req.query.mine === true ? true : false;
+
+      try {
+        // Run a stored procedure to check if current user is actually a part of the workspace
+        const [user_rows] = await MySQLPool.query(`CALL IsUserInWorkspace(?,?,?)`, [
+          session.workspaceID,
+          session.userID,
+          session.userType,
+        ]);
+
+        if (user_rows[0].length !== 1) {
+          res.status(401).json({ error: 'Unauthorized access' });
+        } else {
+          // Run a stored procedure to get all tasks from today for a specific workspace
+          const [rows] = await MySQLPool.query(`CALL GetAllTasks(?,?,?)`, [
+            session.workspaceID,
+            onlyCurrentUserTasks,
+            session.userID,
+          ]);
+
+          res.json({ tasks: rows[0] });
+        }
+      } catch (error) {
+        Logger.error(error);
+        res.status(500).json({ error: 'Internal server error occured' });
+      }
+    }
+  });
+
+  // POST route used to search for a task group
+  taskRouter.post(
+    '/group/search',
+    [
+      // Check that group name is of valid length
+      check('task_group_name').isLength({ min: 4, max: 255 }),
+    ],
+    async (req, res) => {
+      let session = req.session;
+
+      const validationErrors = validationResult(req).formatWith(validationErrorFormatter);
+
+      // Check if the user is logged in or not
+      if (session.isUserLoggedIn !== true) {
+        res.status(401).json({ success: false, error: 'Unauthorized access' });
+      } else if (validationErrors.isEmpty() === false) {
+        res.status(422).json({
+          success: false,
+          error: 'Group name needs to be greater than 4 letters',
+        });
+      } else {
+        try {
+          // Run a stored procedure to search for a group
+          const [rows] = await MySQLPool.query('CALL SearchForTaskGroup(?, ?)', [
+            session.workspaceID,
+            `%${req.body.task_group_name}%`,
+          ]);
+
+          res.json({ groups: rows[0] });
+        } catch (error) {
+          Logger.error(error);
+          res.status(500).json({ error: 'Internal server error occured' });
+        }
+      }
+    },
+  );
+
+  // POST route used to create a new task groups
+  taskRouter.post(
+    '/group',
+    [
+      // Check that workspace name is of valid length
+      check('task_group_name').isLength({ min: 4, max: 255 }),
+    ],
+    async (req, res) => {
+      let session = req.session;
+
+      const validationErrors = validationResult(req).formatWith(validationErrorFormatter);
+
+      // Check if the user is logged in or not and check if the user is a manager
+      if (session.isUserLoggedIn !== true || session.userType !== 0) {
+        res.status(401).json({ success: false, error: 'Unauthorized access' });
+      } else if (validationErrors.isEmpty() === false) {
+        res.status(422).json({
+          success: false,
+          error: 'Group name needs to be greater than 4 letters',
+        });
+      } else {
+        try {
+          // Run a stored procedure to create a new workspace
+          const [rows] = await MySQLPool.query('CALL CreateNewTaskGroup(?,?)', [
+            session.workspaceID,
+            req.body.task_group_name,
+          ]);
+
+          res.json({ task_group_id: rows[0][0].task_group_id });
         } catch (error) {
           Logger.error(error);
           res.status(500).json({ error: 'Internal server error occured' });

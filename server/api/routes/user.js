@@ -16,6 +16,13 @@ const validationErrorFormatter = ({ msg }) => {
   return msg;
 };
 
+// Custome validator to availabilty length
+const isLength = (value) => {
+  if (value === undefined || value === null) return false;
+  if (value.length !== 7) return false;
+  else return true;
+};
+
 export default (baseRouter) => {
   baseRouter.use('/', userRouter);
 
@@ -40,9 +47,9 @@ export default (baseRouter) => {
         .isLength({ min: 5, max: 30 })
         .withMessage('Username size needs to be between 5 and 30'),
       // Check that password is a valid hash
-      check('pass').isMD5().withMessage('The password is not hashed properly'),
+      check('pass').isMD5().withMessage('Chosen password is weak'),
       // Check that email is valid
-      check('email').isEmail().withMessage('Provided email is not a valid email'),
+      check('email').isEmail().withMessage('Provide a valid email address'),
       // Check that account type is a valid enum
       check('account_type')
         .isInt({ min: 0, max: 1 })
@@ -52,7 +59,9 @@ export default (baseRouter) => {
       let session = req.session;
 
       if (session.isUserLoggedIn === true) {
-        res.redirect('/scheduler');
+        // A way to redirect when using XHTTP
+        res.setHeader('xhttp-redirect', '/scheduler');
+        res.sendStatus(200);
       } else {
         const validationErrors = validationResult(req).formatWith(
           validationErrorFormatter,
@@ -98,7 +107,9 @@ export default (baseRouter) => {
               session.userID = userID;
               session.userType = req.body.account_type;
 
-              res.redirect('/scheduler');
+              // A way to redirect when using XHTTP
+              res.setHeader('xhttp-redirect', '/scheduler');
+              res.sendStatus(200);
             }
           } catch (error) {
             // Check what type of error occured
@@ -132,7 +143,9 @@ export default (baseRouter) => {
       let session = req.session;
 
       if (session.isUserLoggedIn === true) {
-        res.redirect('/scheduler');
+        // A way to redirect when using XHTTP
+        res.setHeader('xhttp-redirect', '/scheduler');
+        res.sendStatus(200);
       } else {
         const validationErrors = validationResult(req).formatWith(
           validationErrorFormatter,
@@ -152,7 +165,8 @@ export default (baseRouter) => {
             ]);
 
             if (rows[0].length === 1) {
-              userID = rows[0][0].manager_id;
+              if (req.body.account_type === 0) userID = rows[0][0].manager_id;
+              else if (req.body.account_type === 1) userID = rows[0][0].worker_id;
 
               // Get workspaces manager belongs to
               const [
@@ -178,7 +192,9 @@ export default (baseRouter) => {
               session.userType = req.body.account_type;
               session.workspaceID = workspaceID;
 
-              res.redirect('/scheduler');
+              // A way to redirect when using XHTTP
+              res.setHeader('xhttp-redirect', '/scheduler');
+              res.sendStatus(200);
             }
           } catch (error) {
             Logger.error(error);
@@ -199,8 +215,108 @@ export default (baseRouter) => {
         Logger.error(error);
         res.status(500).json({ success: false, error: 'Internal server error occured' });
       } else {
-        res.json({ success: true });
+        // Redirect to home
+        res.setHeader('xhttp-redirect', '/');
+        res.sendStatus(200);
       }
     });
   });
+
+  // GET route used to retrieve current user id
+  userRouter.get('/user/id', async (req, res) => {
+    let session = req.session;
+
+    if (session.isUserLoggedIn === true) {
+      res.json({ user_id: session.userID });
+    } else {
+      res.sendStatus(401);
+    }
+  });
+
+  // GET route used to retrieve user profile
+  userRouter.get('/profile', async (req, res) => {
+    let session = req.session;
+
+    if (session.isUserLoggedIn === true) {
+      try {
+        const [rows] = await MySQLPool.query('CALL GetProfileInformation(?,?)', [
+          session.userType,
+          session.userID,
+        ]);
+
+        res.json({ profile: rows[0][0] });
+      } catch (error) {
+        Logger.error(error);
+        res.status(500).json({ error: 'Internal server error occured' });
+      }
+    } else {
+      res.sendStatus(401);
+    }
+  });
+
+  // GET route used to retrieve user profile
+  userRouter.put(
+    '/profile',
+    [
+      // Check that first name is not empty
+      check('first_name').not().isEmpty().withMessage('First name can not be empty'),
+      // Check that the first name only contains alphabets
+      check('first_name')
+        .isAlpha()
+        .withMessage('First name can only contain letters (a-zA-Z)'),
+      // Check that last name is not empty
+      check('last_name').not().isEmpty().withMessage('Last name can not be empty'),
+      // Check that last name only contains alphabets
+      check('last_name')
+        .isAlpha()
+        .withMessage('Last name can only contain letters (a-zA-Z)'),
+      // Check that username is of valid length
+      check('username')
+        .isLength({ min: 5, max: 30 })
+        .withMessage('Username size needs to be between 5 and 30'),
+      // Check that password is a valid hash
+      check('pass').isMD5().withMessage('Chosen password is weak'),
+      // Check that email is valid
+      check('email').isEmail().withMessage('Provide a valid email address'),
+      // Check that availability is not empty
+      check('availability')
+        .custom(isLength, 7)
+        .withMessage('Availability is not in a valid format'),
+    ],
+    async (req, res) => {
+      let session = req.session;
+
+      if (session.isUserLoggedIn === true) {
+        const validationErrors = validationResult(req).formatWith(
+          validationErrorFormatter,
+        );
+
+        if (validationErrors.isEmpty() === false) {
+          res.status(422).json({ errors: validationErrors.array() });
+        } else {
+          try {
+            const [
+              rows,
+            ] = await MySQLPool.query('CALL UpdateUserProfile(?,?,?,?,?,?,?,?)', [
+              session.userID,
+              session.userType,
+              req.body.first_name,
+              req.body.last_name,
+              req.body.email,
+              req.body.username,
+              req.body.pass,
+              req.body.availability,
+            ]);
+
+            res.sendStatus(200);
+          } catch (error) {
+            Logger.error(error);
+            res.status(500).json({ error: 'Internal server error occured' });
+          }
+        }
+      } else {
+        res.sendStatus(401);
+      }
+    },
+  );
 };

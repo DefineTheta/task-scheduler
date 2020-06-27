@@ -3,40 +3,32 @@ import Vue from 'vue';
 
 import NavBar from './components/NavBar';
 import SideBar from './components/SideBar';
-import ExperienceBar from './components/ExperienceBar';
 import TaskContainer from './components/TaskContainer';
+import WorkspacePopUp from './components/WorkspacePopUp';
+import Settings from './components/Settings';
 
 // Used to make API calls
-import API from './utility/API';
+// import API from './utility/API';
 
 // Used to pass data on events between different Vue components
 window.Event = new Vue();
 
 export default {
-  name: 'Schedule',
-  components: { NavBar, SideBar, ExperienceBar, TaskContainer },
+  name: 'ManagerScheduler',
+  components: { NavBar, SideBar, TaskContainer, WorkspacePopUp, Settings },
   data() {
     return {
-      workspaces: [],
-      activeWorkspaceId: 2,
-      activeUserId: 1,
-      activeUserType: 'manager',
+      workspacePopupActive: false,
+      settingsActive: false,
     };
   },
   created() {
-    Event.$on('workspaceRetrieved', (data) => {
-      this.workspaces = data;
+    Event.$on('workspace-popup-button-clicked', () => {
+      this.workspacePopupActive = !this.workspacePopupActive;
     });
-
-    let cookie = JSON.parse(document.cookie);
-
-    if (cookie.account_type === 'worker') {
-      this.activeUserType = 'worker';
-    } else if (cookie.account_type === 'manager') {
-      this.activeUserType = 'manager';
-    }
-
-    API.get('/api/v1/worker/workspaces', 'workspaceRetrieved');
+    Event.$on('settings-popup-button-clicked', () => {
+      this.settingsActive = !this.settingsActive;
+    });
   },
 };
 </script>
@@ -44,15 +36,12 @@ export default {
 <template>
   <div class="w-full h-full relative">
     <NavBar></NavBar>
-    <SideBar :workspaces="workspaces" :active-workspace-id="activeWorkspaceId"></SideBar>
+    <SideBar></SideBar>
     <div class="main mt-16 pt-10 flex flex-col items-center right-0 absolute right-0">
-      <ExperienceBar></ExperienceBar>
-      <TaskContainer
-        :user-id="activeUserId"
-        :user-type="activeUserType"
-        type="today"
-      ></TaskContainer>
+      <TaskContainer type="today"></TaskContainer>
     </div>
+    <WorkspacePopUp v-if="workspacePopupActive"></WorkspacePopUp>
+    <Settings v-if="settingsActive"></Settings>
   </div>
 </template>
 
